@@ -1,0 +1,2 @@
+///API
+class API {}
