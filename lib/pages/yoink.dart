@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_advanced_drawer/flutter_advanced_drawer.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
-import 'package:get/route_manager.dart';
-import 'package:yoink/pages/settings/settings.dart';
-import 'package:yoink/util/widgets/buttons.dart';
 import 'package:yoink/util/widgets/main.dart';
 
 class Yoink extends StatefulWidget {
@@ -13,23 +11,57 @@ class Yoink extends StatefulWidget {
 }
 
 class _YoinkState extends State<Yoink> {
+  ///Drawer Controller
+  final AdvancedDrawerController _drawerController = AdvancedDrawerController();
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: MainWidgets.appBar(
-        allowBack: false,
-        centerTitle: false,
-        title: const Text("Yoink"),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 10.0),
-            child: Buttons.icon(
-              icon: Ionicons.ios_settings_outline,
-              onTap: () => Get.toNamed("/settings"),
-            ),
+    return AdvancedDrawer(
+      controller: _drawerController,
+      animationCurve: Curves.easeInOut,
+      animationDuration: const Duration(milliseconds: 300),
+      animateChildDecoration: true,
+      backdrop: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Colors.blueGrey, Colors.blueGrey.withOpacity(0.2)],
           ),
-        ],
+        ),
       ),
+      drawer: SafeArea(
+        child: Column(
+          children: [
+            //Header
+            Center(
+              child: Image.asset("assets/img/logo.png", height: 120.0),
+            ),
+
+            //Find Videos
+            MainWidgets.menuItem(
+              icon: Ionicons.ios_search_outline,
+              title: "Find Videos",
+              onTap: () {},
+            ),
+
+            //Downloads
+            MainWidgets.menuItem(
+              icon: Ionicons.ios_list_outline,
+              title: "Downloads",
+              onTap: () {},
+            ),
+
+            //Spacer
+            const Spacer(),
+
+            //Footer
+          ],
+        ),
+      ),
+      child: Placeholder(),
     );
   }
 }

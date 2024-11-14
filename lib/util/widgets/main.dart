@@ -1,5 +1,3 @@
-import 'dart:io';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:get/route_manager.dart';
@@ -38,80 +36,19 @@ class MainWidgets {
     );
   }
 
-  ///Bottom Navigation Bar
-  static Widget bottomNav({
-    required int navIndex,
-    required Function(int index) onChanged,
+  ///Menu Item
+  static Widget menuItem({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
   }) {
-    //Android
-    if (Platform.isAndroid) {
-      return ClipRRect(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(14.0)),
-        child: BottomNavigationBar(
-          backgroundColor: Theme.of(Get.context!).dialogBackgroundColor,
-          selectedItemColor: Theme.of(Get.context!).iconTheme.color,
-          currentIndex: navIndex,
-          onTap: (index) {
-            onChanged(index);
-          },
-          items: const [
-            //Home
-            BottomNavigationBarItem(
-              icon: Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Icon(Ionicons.ios_home_outline),
-              ),
-              label: "Home",
-            ),
-
-            //Offline
-            BottomNavigationBarItem(
-              icon: Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Icon(Ionicons.ios_grid_outline),
-              ),
-              label: "My Servers",
-            ),
-          ],
-        ),
-      );
-    }
-
-    //iOS
-    if (Platform.isIOS) {
-      return ClipRRect(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(14.0)),
-        child: CupertinoTabBar(
-          activeColor: Theme.of(Get.context!).iconTheme.color,
-          currentIndex: navIndex,
-          onTap: (index) {
-            onChanged(index);
-          },
-          height: 60.0,
-          items: const [
-            //Home
-            BottomNavigationBarItem(
-              icon: Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Icon(Ionicons.ios_home_outline),
-              ),
-              label: "Home",
-            ),
-
-            //Offline
-            BottomNavigationBarItem(
-              icon: Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Icon(Ionicons.ios_grid_outline),
-              ),
-              label: "My Servers",
-            ),
-          ],
-        ),
-      );
-    }
-
-    //Default
-    return Container();
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: ListTile(
+        leading: Icon(icon),
+        title: Text(title),
+        onTap: onTap,
+      ),
+    );
   }
 }
