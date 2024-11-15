@@ -49,7 +49,7 @@ class Intro extends StatelessWidget {
             );
 
             //Go Home
-            Get.toNamed("/");
+            Get.offAndToNamed("/");
           },
         ),
       ),

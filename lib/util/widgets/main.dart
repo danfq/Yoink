@@ -44,10 +44,18 @@ class MainWidgets {
   }) {
     return Padding(
       padding: const EdgeInsets.all(20.0),
-      child: ListTile(
-        leading: Icon(icon),
-        title: Text(title),
-        onTap: onTap,
+      child: Card(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14.0),
+        ),
+        child: ListTile(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14.0),
+          ),
+          leading: Icon(icon),
+          title: Text(title),
+          onTap: onTap,
+        ),
       ),
     );
   }

@@ -43,6 +43,7 @@ class Buttons {
       style: ElevatedButton.styleFrom(
         backgroundColor:
             _currentTheme ? const Color(0xFFFAFAFA) : const Color(0xFF1F2A33),
+        padding: const EdgeInsets.all(14.0),
       ),
       icon: Icon(
         icon,
@@ -84,9 +85,10 @@ class Buttons {
     required IconData icon,
     required VoidCallback onTap,
     Color? backgroundColor,
+    Color? iconColor,
   }) {
     return IconButton.filled(
-      icon: Icon(icon, color: Theme.of(Get.context!).cardColor),
+      icon: Icon(icon, color: iconColor ?? Theme.of(Get.context!).cardColor),
       style: IconButton.styleFrom(backgroundColor: backgroundColor),
       onPressed: onTap,
     );
