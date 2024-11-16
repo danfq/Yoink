@@ -1,8 +1,5 @@
-import 'dart:io';
-
 import 'package:flutter/widgets.dart';
 import 'package:yoink/util/data/local.dart';
-import 'package:window_size/window_size.dart';
 
 ///Main Handler
 class MainHandler {
@@ -13,11 +10,6 @@ class MainHandler {
   static Future<void> init() async {
     //Widgets Binding
     WidgetsFlutterBinding.ensureInitialized();
-
-    //Change Window Title for Desktop
-    if (!Platform.isAndroid && !Platform.isIOS) {
-      setWindowTitle("Yoink");
-    }
 
     //Local Data
     await LocalData.init();

@@ -3,7 +3,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/route_manager.dart';
 import 'package:toastification/toastification.dart';
-import 'package:yoink/pages/download/verify.dart';
 import 'package:yoink/pages/intro/intro.dart';
 import 'package:yoink/pages/settings/settings.dart';
 import 'package:yoink/pages/yoink.dart';

@@ -3,7 +3,7 @@ import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:get/route_manager.dart';
 import 'package:yoink/util/data/api.dart';
 import 'package:yoink/util/handlers/anim.dart';
-import 'package:yoink/util/models/video.dart';
+import 'package:yoink/util/models/video.dart' as vid;
 import 'package:yoink/util/widgets/buttons.dart';
 import 'package:yoink/util/widgets/main.dart';
 
@@ -11,7 +11,7 @@ class VerifyPlaylist extends StatefulWidget {
   const VerifyPlaylist({super.key, required this.videos});
 
   ///Videos
-  final List<Video> videos;
+  final List<vid.Video> videos;
 
   @override
   State<VerifyPlaylist> createState() => _VerifyPlaylistState();
@@ -19,7 +19,7 @@ class VerifyPlaylist extends StatefulWidget {
 
 class _VerifyPlaylistState extends State<VerifyPlaylist> {
   ///Videos
-  final List<Video> _videos = [];
+  final List<vid.Video> _videos = [];
 
   ///Audio Only
   bool _audioOnly = false;
@@ -118,7 +118,7 @@ class _VerifyPlaylistState extends State<VerifyPlaylist> {
                       title: Row(
                         children: [
                           Expanded(
-                            child: Video(
+                            child: vid.Video(
                               id: video.id,
                               title: video.title,
                               thumb: video.thumb,
