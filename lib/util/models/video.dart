@@ -32,6 +32,9 @@ class Video extends StatelessWidget {
   ///On Removed
   final VoidCallback? onRemoved;
 
+  ///Show Action Button
+  final bool? showActionButton;
+
   ///Video
   const Video({
     super.key,
@@ -44,6 +47,7 @@ class Video extends StatelessWidget {
     this.onAdded,
     this.enableRemove,
     this.onRemoved,
+    this.showActionButton = true,
   });
 
   ///`Video` to JSON Object
@@ -59,7 +63,7 @@ class Video extends StatelessWidget {
   }
 
   ///JSON Object to `Video`
-  factory Video.fromJSON(Map<String, dynamic> json) {
+  factory Video.fromJSON(Map<dynamic, dynamic> json) {
     return Video(
       id: json["id"],
       title: json["title"],
@@ -108,67 +112,69 @@ class Video extends StatelessWidget {
               ],
             ),
             subtitle: Text("$formattedRelease | $formattedDuration"),
-            trailing: Buttons.iconFilled(
-              icon: enableRemove ?? false
-                  ? Ionicons.ios_trash_outline
-                  : Ionicons.ios_add_outline,
-              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-              iconColor: Theme.of(context).iconTheme.color,
-              onTap: () {
-                //Check Remove
-                if (enableRemove == true) {
-                  //Confirmation Dialog
-                  Get.defaultDialog(
-                    contentPadding: const EdgeInsets.all(20.0),
-                    title: "Remove Video?",
-                    content: const Text(
-                      "Are you sure you want to remove this Video?",
-                    ),
-                    cancel: Buttons.text(
-                      text: "No",
-                      onTap: () => Get.back(),
-                    ),
-                    confirm: Buttons.elevated(
-                      text: "Yes",
-                      onTap: () {
-                        //On Added
-                        if (onRemoved != null) {
-                          onRemoved!();
-                        }
+            trailing: showActionButton ?? true
+                ? Buttons.iconFilled(
+                    icon: enableRemove ?? false
+                        ? Ionicons.ios_trash_outline
+                        : Ionicons.ios_add_outline,
+                    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                    iconColor: Theme.of(context).iconTheme.color,
+                    onTap: () {
+                      //Check Remove
+                      if (enableRemove == true) {
+                        //Confirmation Dialog
+                        Get.defaultDialog(
+                          contentPadding: const EdgeInsets.all(20.0),
+                          title: "Remove Video?",
+                          content: const Text(
+                            "Are you sure you want to remove this Video?",
+                          ),
+                          cancel: Buttons.text(
+                            text: "No",
+                            onTap: () => Get.back(),
+                          ),
+                          confirm: Buttons.elevated(
+                            text: "Yes",
+                            onTap: () {
+                              //On Added
+                              if (onRemoved != null) {
+                                onRemoved!();
+                              }
 
-                        //Close Dialog
-                        Get.back();
-                      },
-                    ),
-                  );
-                } else {
-                  //Confirmation Dialog
-                  Get.defaultDialog(
-                    contentPadding: const EdgeInsets.all(20.0),
-                    title: "Add Video?",
-                    content: const Text(
-                      "Would you like to add this Video to your Download Playlist?",
-                    ),
-                    cancel: Buttons.text(
-                      text: "No",
-                      onTap: () => Get.back(),
-                    ),
-                    confirm: Buttons.elevated(
-                      text: "Yes",
-                      onTap: () {
-                        //On Added
-                        if (onAdded != null) {
-                          onAdded!(this);
-                        }
+                              //Close Dialog
+                              Get.back();
+                            },
+                          ),
+                        );
+                      } else {
+                        //Confirmation Dialog
+                        Get.defaultDialog(
+                          contentPadding: const EdgeInsets.all(20.0),
+                          title: "Add Video?",
+                          content: const Text(
+                            "Would you like to add this Video to your Download Playlist?",
+                          ),
+                          cancel: Buttons.text(
+                            text: "No",
+                            onTap: () => Get.back(),
+                          ),
+                          confirm: Buttons.elevated(
+                            text: "Yes",
+                            onTap: () {
+                              //On Added
+                              if (onAdded != null) {
+                                onAdded!(this);
+                              }
 
-                        //Close Dialog
-                        Get.back();
-                      },
-                    ),
-                  );
-                }
-              },
-            ),
+                              //Close Dialog
+                              Get.back();
+                            },
+                          ),
+                        );
+                      }
+                    },
+                  )
+                : null,
           ),
         ),
       ),

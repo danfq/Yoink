@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_advanced_drawer/flutter_advanced_drawer.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
-import 'package:yoink/pages/youtube/downloads.dart';
 import 'package:yoink/pages/youtube/find.dart';
 import 'package:yoink/pages/youtube/playlists.dart';
 import 'package:yoink/util/widgets/buttons.dart';
@@ -31,10 +30,6 @@ class _YoinkState extends State<Yoink> {
       //Playlists
       case 1:
         return const Playlists();
-
-      //Downloads
-      case 2:
-        return const Downloads();
 
       //Default - None
       default:
@@ -78,17 +73,6 @@ class _YoinkState extends State<Yoink> {
               onTap: () {
                 setState(() {
                   _navIndex = 1;
-                });
-              },
-            ),
-
-            //Downloads
-            MainWidgets.menuItem(
-              icon: Ionicons.ios_download_outline,
-              title: "Downloads",
-              onTap: () {
-                setState(() {
-                  _navIndex = 2;
                 });
               },
             ),

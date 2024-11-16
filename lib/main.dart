@@ -7,7 +7,6 @@ import 'package:yoink/pages/intro/intro.dart';
 import 'package:yoink/pages/settings/settings.dart';
 import 'package:yoink/pages/yoink.dart';
 import 'package:yoink/pages/youtube/playlists.dart';
-import 'package:yoink/pages/youtube/search.dart';
 import 'package:yoink/util/handlers/main.dart';
 import 'package:yoink/util/themes/themes.dart';
 
@@ -35,7 +34,6 @@ void main() async {
               GetPage(name: "/intro", page: () => Intro()),
               GetPage(name: "/settings", page: () => const Settings()),
               GetPage(name: "/playlists", page: () => const Playlists()),
-              GetPage(name: "/search", page: () => const Search()),
             ],
           );
         },

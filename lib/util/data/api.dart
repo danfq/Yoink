@@ -2,14 +2,16 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/route_manager.dart';
 import 'package:yoink/pages/download/download.dart';
+import 'package:yoink/util/data/local.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart' as yt;
 import 'package:path_provider/path_provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:yoink/util/handlers/toast.dart'; // Make sure this import is correct
-import 'package:yoink/util/models/video.dart'; // Make sure this import is correct
-import 'package:archive/archive.dart'; // Add this import
-import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart'; // Add FFmpeg import
+import 'package:yoink/util/handlers/toast.dart';
+import 'package:yoink/util/models/video.dart';
+import 'package:yoink/util/models/playlist.dart';
+import 'package:archive/archive.dart';
+import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
 
 class API {
   // YouTube Client
@@ -246,5 +248,21 @@ class API {
         audioOnly: audioOnly,
       ),
     );
+  }
+
+  ///Save Playlist
+  static Future<void> savePlaylist({
+    required Playlist playlist,
+    required String name,
+  }) async {
+    //Save Playlist
+    await LocalData.updateValue(
+      box: "playlists",
+      item: name,
+      value: playlist.toJSON(),
+    );
+
+    //Notify User
+    Toast.show(title: "Done!", message: "\"$name\" Saved Successfully!");
   }
 }

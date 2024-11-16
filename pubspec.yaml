@@ -33,6 +33,7 @@ dependencies:
   archive: ^3.6.1
   http: ^1.2.2
   ffmpeg_kit_flutter: ^6.0.3
+  uuid: ^4.5.1
 
 dev_dependencies:
   flutter_test:
