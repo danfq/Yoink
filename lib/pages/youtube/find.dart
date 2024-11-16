@@ -17,14 +17,14 @@ class FindVideos extends StatefulWidget {
 }
 
 class _FindVideosState extends State<FindVideos> {
-  ///Search Controller
+  /// Search Controller
   final TextEditingController _searchController = TextEditingController();
 
-  ///Download Playlist
+  /// Download Playlist
   final ValueNotifier<List<Video>> downloadPlaylist =
       ValueNotifier<List<Video>>([]);
 
-  ///Query
+  /// Query
   String query = "";
 
   @override
@@ -43,12 +43,12 @@ class _FindVideosState extends State<FindVideos> {
       body: SafeArea(
         child: Column(
           children: [
-            //Search Input Row
+            // Search Input Row
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.max,
               children: [
-                //Input Field
+                // Input Field
                 Expanded(
                   child: Input(
                     controller: _searchController,
@@ -56,7 +56,7 @@ class _FindVideosState extends State<FindVideos> {
                   ),
                 ),
 
-                //Search Button
+                // Search Button
                 Padding(
                   padding: const EdgeInsets.all(20.0),
                   child: Buttons.elevatedIcon(
@@ -72,17 +72,25 @@ class _FindVideosState extends State<FindVideos> {
               ],
             ),
 
-            //Spacing
+            // Spacing
             const SizedBox(height: 20.0),
 
-            //Results List
-            if (query.isNotEmpty)
+            // Results List
+            if (query.isEmpty)
+              // Display text when no search has been made yet
+              const Center(
+                child: Text(
+                  "Search Results Will Appear Here",
+                  style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.w500),
+                ),
+              )
+            else
               FutureBuilder<List<Video>>(
                 future: _searchVideos(query),
                 builder: (context, snapshot) {
-                  //Check Connection State
+                  // Check Connection State
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    //Loading
+                    // Loading
                     return Center(
                       child: Column(
                         children: [
@@ -92,7 +100,7 @@ class _FindVideosState extends State<FindVideos> {
                       ),
                     );
                   } else if (snapshot.hasError) {
-                    //Error
+                    // Error
                     return Center(
                       child: Text("Error: \"${snapshot.error}\""),
                     );
@@ -102,15 +110,15 @@ class _FindVideosState extends State<FindVideos> {
                       child: AnimHandler.asset(animation: "empty"),
                     );
                   } else {
-                    //Videos
+                    // Videos
                     final videos = snapshot.data!;
 
-                    //Results List
+                    // Results List
                     return Expanded(
                       child: ListView.builder(
                         itemCount: videos.length,
                         itemBuilder: (context, index) {
-                          //Video
+                          // Video
                           final video = videos[index];
 
                           return Video(
@@ -121,14 +129,14 @@ class _FindVideosState extends State<FindVideos> {
                             duration: video.duration,
                             releaseDate: video.releaseDate,
                             onAdded: (video) {
-                              //Check if Video is Already Present
+                              // Check if Video is Already Present
                               if (!downloadPlaylist.value.contains(video)) {
                                 // Add Video to Playlist without triggering setState
                                 downloadPlaylist.value =
                                     List.from(downloadPlaylist.value)
                                       ..add(video);
 
-                                //Notify User
+                                // Notify User
                                 Toast.show(
                                   title: "Done!",
                                   message: "\"${video.title}\" Added!",
@@ -146,7 +154,7 @@ class _FindVideosState extends State<FindVideos> {
         ),
       ),
 
-      //Floating Action Button - Verify Playlist
+      // Floating Action Button - Verify Playlist
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       floatingActionButton: ValueListenableBuilder<List<Video>>(
         valueListenable: downloadPlaylist,
@@ -159,12 +167,12 @@ class _FindVideosState extends State<FindVideos> {
                     color: Theme.of(context).iconTheme.color,
                   ),
                   onPressed: () {
-                    //Check Download Playlist
+                    // Check Download Playlist
                     if (downloadPlaylist.value.isEmpty) {
                       return;
                     }
 
-                    //Go to VerifyPlaylist
+                    // Go to VerifyPlaylist
                     Get.to(
                       () => VerifyPlaylist(
                         videos: downloadPlaylist.value,
