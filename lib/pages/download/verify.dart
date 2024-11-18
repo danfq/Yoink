@@ -187,6 +187,8 @@ class _VerifyPlaylistState extends State<VerifyPlaylist> {
                             //Name
                             Input(
                               controller: nameController,
+                              backgroundColor:
+                                  Theme.of(context).scaffoldBackgroundColor,
                               placeholder: "Name Your Playlist",
                               centerPlaceholder: true,
                             ),
@@ -215,7 +217,6 @@ class _VerifyPlaylistState extends State<VerifyPlaylist> {
                                 name: name,
                                 videos: _videos,
                               ),
-                              name: name,
                             );
                           } else {
                             //Close Dialog
@@ -261,7 +262,7 @@ class _VerifyPlaylistState extends State<VerifyPlaylist> {
                       onTap: () async {
                         //Initiate Download Procedure
                         await API.downloadPlaylist(
-                          playlist: _videos,
+                          videos: _videos,
                           audioOnly: _audioOnly,
                         );
                       },

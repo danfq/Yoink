@@ -72,12 +72,12 @@ class _FindVideosState extends State<FindVideos> {
               ],
             ),
 
-            // Spacing
+            //Spacing
             const SizedBox(height: 20.0),
 
-            // Results List
+            //Results List
             if (query.isEmpty)
-              // Display text when no search has been made yet
+              //Nothing Searched Yet
               const Center(
                 child: Text(
                   "Search Results Will Appear Here",

@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:get/route_manager.dart';
-import 'package:toastification/toastification.dart';
 import 'package:yoink/pages/yoink.dart';
 import 'package:yoink/util/data/api.dart';
 import 'package:yoink/util/handlers/toast.dart';
@@ -31,13 +30,13 @@ class DownloadPlaylist extends StatefulWidget {
 }
 
 class _DownloadPlaylistState extends State<DownloadPlaylist> {
-  // Progress variables
+  final ValueNotifier<int> _progressNotifier = ValueNotifier<int>(0);
+  final ValueNotifier<String> _currentTaskNotifier =
+      ValueNotifier<String>("Idle");
+
   bool isWorking = false;
   bool isComplete = false;
-  String currentTask = "Idle";
-  int progress = 0;
 
-  /// Total videos
   int totalVideos = 0;
 
   @override
@@ -46,71 +45,80 @@ class _DownloadPlaylistState extends State<DownloadPlaylist> {
     totalVideos = widget.playlist.length;
   }
 
-  /// Start the download process
+  @override
+  void dispose() {
+    _progressNotifier.dispose();
+    _currentTaskNotifier.dispose();
+    super.dispose();
+  }
+
   Future<void> _startDownload() async {
     setState(() {
       isWorking = true;
-      currentTask = "Initializing...";
+      isComplete = false;
     });
 
-    final List<File> downloadedFiles = [];
     try {
+      final downloadedFiles = <File>[];
+
       // Step 1: Download Videos
-      await _performTask("Downloading Videos", widget.playlist.length,
-          (index) async {
-        final video = widget.playlist[index];
-        final File file =
-            await _downloadVideo(video, "${index + 1} - ${video.title}");
-        downloadedFiles.add(file);
-      });
+      await _performTask(
+        taskName: "Downloading Videos",
+        total: widget.playlist.length,
+        action: (index) async {
+          final video = widget.playlist[index];
+          final file =
+              await _downloadVideo(video, "${index + 1} - ${video.title}");
+          downloadedFiles.add(file);
+        },
+      );
 
       // Step 2: Rename Files
-      await _performTask("Renaming Videos", downloadedFiles.length,
-          (index) async {
-        final renamedFile = await _renameFile(
-          downloadedFiles[index],
-          "${index + 1} - ${widget.playlist[index].title}",
-        );
-        downloadedFiles[index] = renamedFile;
-      });
+      await _performTask(
+        taskName: "Renaming Videos",
+        total: downloadedFiles.length,
+        action: (index) async {
+          final renamedFile = await _renameFile(
+            downloadedFiles[index],
+            "${index + 1} - ${widget.playlist[index].title}",
+          );
+          downloadedFiles[index] = renamedFile;
+        },
+      );
 
-      // Step 3: ZIP Videos
+      // Step 3: ZIP Files
       await _zipVideos(downloadedFiles);
 
       // Mark as complete
       setState(() {
-        isWorking = false;
         isComplete = true;
       });
       _showToast("Success", "Download Complete!");
     } catch (e) {
+      _showToast("Error", e.toString());
+    } finally {
       setState(() {
         isWorking = false;
-        currentTask = "Idle";
       });
-      _showToast("Error", e.toString());
     }
   }
 
-  /// Perform a specific task
-  Future<void> _performTask(
-      String taskName, int total, Future<void> Function(int) task) async {
-    setState(() {
-      currentTask = taskName;
-      progress = 0;
-    });
+  Future<void> _performTask({
+    required String taskName,
+    required int total,
+    required Future<void> Function(int) action,
+  }) async {
+    _currentTaskNotifier.value = taskName;
+    _progressNotifier.value = 0;
 
     for (int i = 0; i < total; i++) {
-      await task(i);
-      setState(() {
-        progress = i + 1;
-      });
+      await action(i);
+      _progressNotifier.value = i + 1;
     }
   }
 
-  /// Download video
   Future<File> _downloadVideo(Video video, String fileName) async {
-    final File? file = await API.downloadVideo(
+    final file = await API.downloadVideo(
       videoID: video.id,
       audioOnly: widget.audioOnly,
     );
@@ -124,53 +132,46 @@ class _DownloadPlaylistState extends State<DownloadPlaylist> {
     return file.copy(filePath);
   }
 
-  /// Rename a file (offloaded to Isolate)
   Future<File> _renameFile(File file, String newName) async {
     final String newPath =
         "${widget.savePath}/$newName.${widget.audioOnly ? "mp3" : "mp4"}";
-
-    // Offload renaming to an isolate
-    final renamedFile = await compute(_renameFileIsolate, [file.path, newPath]);
-    return File(renamedFile);
+    return compute(_renameFileIsolate, [file.path, newPath]);
   }
 
-  static String _renameFileIsolate(List<String> args) {
+  static File _renameFileIsolate(List<String> args) {
     final File file = File(args[0]);
     final String newPath = args[1];
-    return file.renameSync(newPath).path;
+    final renamedFile = file.renameSync(newPath);
+    return renamedFile;
   }
 
-  /// ZIP videos using an isolate
   Future<void> _zipVideos(List<File> files) async {
-    setState(() {
-      currentTask = "Zipping Files";
-      progress = 0;
-    });
+    _currentTaskNotifier.value = "Zipping Files";
+    _progressNotifier.value = 0;
 
     final zipPath =
         "${widget.savePath}/playlist_${DateTime.now().millisecondsSinceEpoch}.zip";
 
-    final ReceivePort receivePort = ReceivePort();
+    final receivePort = ReceivePort();
     await Isolate.spawn(
       _zipFilesInIsolate,
       [files.map((e) => e.path).toList(), zipPath, receivePort.sendPort],
     );
 
-    // Wait for completion
     final result = await receivePort.first;
-    if (result is String && result == "success") {
-      for (final file in files) {
-        await file.delete();
-      }
-    } else {
+    if (result is! String || result != "success") {
       throw Exception("Failed to zip files.");
+    }
+
+    for (final file in files) {
+      await file.delete();
     }
   }
 
   static void _zipFilesInIsolate(List<dynamic> args) {
-    final List<String> filePaths = args[0];
-    final String zipPath = args[1];
-    final SendPort sendPort = args[2];
+    final filePaths = args[0] as List<String>;
+    final zipPath = args[1] as String;
+    final sendPort = args[2] as SendPort;
 
     try {
       final archive = Archive();
@@ -186,21 +187,17 @@ class _DownloadPlaylistState extends State<DownloadPlaylist> {
 
       final zipBytes = ZipEncoder().encode(archive);
       File(zipPath).writeAsBytesSync(zipBytes!);
-
       sendPort.send("success");
     } catch (e) {
       sendPort.send(e.toString());
     }
   }
 
-  /// Show toast
   void _showToast(String title, String message) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Toast.show(
-        title: title,
-        message: message,
-      );
-    });
+    Toast.show(
+      title: title,
+      message: message,
+    );
   }
 
   @override
@@ -212,51 +209,61 @@ class _DownloadPlaylistState extends State<DownloadPlaylist> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (!isWorking && !isComplete)
-              Center(
-                child: Buttons.elevatedIcon(
-                  text: "Start Download",
-                  icon: Ionicons.ios_download_outline,
-                  onTap: _startDownload,
-                ),
-              ),
-            if (isWorking)
-              Column(
-                children: [
-                  Text(currentTask),
-                  LinearProgressIndicator(
-                    value: progress / totalVideos,
-                  ),
-                  Text("$progress / $totalVideos"),
-                ],
-              ),
-            if (isComplete)
-              Center(
-                child: Column(
+        child: ValueListenableBuilder<int>(
+          valueListenable: _progressNotifier,
+          builder: (context, progress, _) {
+            return ValueListenableBuilder<String>(
+              valueListenable: _currentTaskNotifier,
+              builder: (context, currentTask, __) {
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(
-                      Ionicons.ios_checkmark_circle,
-                      color: Colors.green,
-                      size: 64.0,
-                    ),
-                    const SizedBox(height: 20.0),
-                    const Text(
-                      "Download Complete!",
-                      style: TextStyle(fontSize: 18.0, color: Colors.green),
-                    ),
-                    const SizedBox(height: 20.0),
-                    Buttons.elevatedIcon(
-                      text: "Go Home",
-                      icon: Ionicons.ios_home_outline,
-                      onTap: () => Get.offAll(() => const Yoink()),
-                    ),
+                    if (!isWorking && !isComplete)
+                      Center(
+                        child: Buttons.elevatedIcon(
+                          text: "Start Download",
+                          icon: Ionicons.ios_download_outline,
+                          onTap: _startDownload,
+                        ),
+                      ),
+                    if (isWorking)
+                      Column(
+                        children: [
+                          Text(currentTask),
+                          LinearProgressIndicator(
+                              value: progress / totalVideos),
+                          Text("$progress / $totalVideos"),
+                        ],
+                      ),
+                    if (isComplete)
+                      Center(
+                        child: Column(
+                          children: [
+                            const Icon(
+                              Ionicons.ios_checkmark_circle,
+                              color: Colors.green,
+                              size: 64.0,
+                            ),
+                            const SizedBox(height: 20.0),
+                            const Text(
+                              "Download Complete!",
+                              style: TextStyle(
+                                  fontSize: 18.0, color: Colors.green),
+                            ),
+                            const SizedBox(height: 20.0),
+                            Buttons.elevatedIcon(
+                              text: "Go Home",
+                              icon: Ionicons.ios_home_outline,
+                              onTap: () => Get.offAll(() => const Yoink()),
+                            ),
+                          ],
+                        ),
+                      ),
                   ],
-                ),
-              ),
-          ],
+                );
+              },
+            );
+          },
         ),
       ),
     );

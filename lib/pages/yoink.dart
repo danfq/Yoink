@@ -20,6 +20,23 @@ class _YoinkState extends State<Yoink> {
   ///Nav Index
   int _navIndex = 0;
 
+  ///Title
+  String _title() {
+    switch (_navIndex) {
+      //Find Videos
+      case 0:
+        return "Find Videos";
+
+      //Playlists
+      case 1:
+        return "Playlists";
+
+      //Default - None
+      default:
+        return "Yoink";
+    }
+  }
+
   ///Body
   Widget _body() {
     switch (_navIndex) {
@@ -97,7 +114,7 @@ class _YoinkState extends State<Yoink> {
               _drawerController.showDrawer();
             },
           ),
-          title: const Text("Yoink"),
+          title: Text(_title()),
         ),
         body: SafeArea(child: _body()),
       ),

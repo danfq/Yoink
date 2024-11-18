@@ -74,27 +74,40 @@ class _PlaylistsState extends State<Playlists> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14.0)),
       child: Column(
         children: [
-          ListTile(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14.0),
-            ),
-            title: Text(
-              playlist.name,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 20.0,
+          Row(
+            children: [
+              //Playlist
+              Expanded(
+                child: ListTile(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14.0),
+                  ),
+                  title: Text(
+                    playlist.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  trailing: AnimatedRotation(
+                    duration: const Duration(milliseconds: 200),
+                    turns: isExpanded ? 0.25 : 0.0,
+                    child: const Icon(Ionicons.ios_chevron_forward),
+                  ),
+                  onTap: () {
+                    setState(() {
+                      expandedState[playlist.id] = !isExpanded;
+                    });
+                  },
+                ),
               ),
-            ),
-            trailing: AnimatedRotation(
-              duration: const Duration(milliseconds: 200),
-              turns: isExpanded ? 0.25 : 0.0,
-              child: const Icon(Ionicons.ios_chevron_forward),
-            ),
-            onTap: () {
-              setState(() {
-                expandedState[playlist.id] = !isExpanded;
-              });
-            },
+
+              //Remove Playlist
+              Buttons.iconFilled(
+                icon: Ionicons.ios_trash_outline,
+                onTap: () {},
+              ),
+            ],
           ),
           if (isExpanded)
             Padding(
@@ -112,14 +125,18 @@ class _PlaylistsState extends State<Playlists> {
                   ...playlist.videos.map(
                     (video) => Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Video(
-                        id: video.id,
-                        title: video.title,
-                        thumb: video.thumb,
-                        channel: video.channel,
-                        duration: video.duration,
-                        releaseDate: video.releaseDate,
-                        showActionButton: false,
+                      child: Row(
+                        children: [
+                          Video(
+                            id: video.id,
+                            title: video.title,
+                            thumb: video.thumb,
+                            channel: video.channel,
+                            duration: video.duration,
+                            releaseDate: video.releaseDate,
+                            showActionButton: false,
+                          ),
+                        ],
                       ),
                     ),
                   ),

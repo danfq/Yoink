@@ -9,7 +9,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:yoink/util/handlers/toast.dart';
 import 'package:yoink/util/models/video.dart';
-import 'package:yoink/util/models/playlist.dart';
+import 'package:yoink/util/models/playlist.dart' as pl;
 import 'package:archive/archive.dart';
 import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
 
@@ -21,10 +21,7 @@ class API {
   static Future<List<Video>> searchByQuery({required String query}) async {
     List<Video> videos = [];
     try {
-      // Search videos by query
       final videoSearchList = await _youtube.search.search(query);
-
-      // Process search results
       for (final videoItem in videoSearchList) {
         final video = Video(
           id: videoItem.id.value,
@@ -39,17 +36,78 @@ class API {
           videos.add(video);
         }
       }
-
-      // Show result count
-      Toast.show(
-          title: "Search Results", message: "${videos.length} videos found");
-    } catch (e) {
-      Toast.show(title: "Error", message: "Error searching: $e");
+    } catch (error) {
+      Toast.show(title: "Error", message: "Error Searching: $error");
     }
     return videos;
   }
 
-  // Download Video and Audio
+  /// Save Playlist Metadata
+  static Future<void> savePlaylist({required pl.Playlist playlist}) async {
+    //Save Playlist
+    await LocalData.updateValue(
+      box: "playlists",
+      item: playlist.id,
+      value: playlist.toJSON(),
+    );
+
+    //Notify User
+    Toast.show(title: "Done!", message: "Playlist Saved Successfully!");
+  }
+
+  ///Delete Playlist by id
+  static Future<void> deletePlaylist({required String id}) async {
+    //Playlists
+    final playlists = LocalData.boxData(box: "playlists");
+
+    //Check if Playlist Exists
+    if (playlists.containsKey(id)) {
+      //Remove Playlist
+      await playlists.remove(id);
+
+      //Notify User
+      Toast.show(title: "Done!", message: "\"$id\" Deleted Successfully!");
+    } else {
+      //Notify User
+      Toast.show(
+        title: "Error",
+        message: "Playlist with ID \"$id\" not found.",
+      );
+    }
+  }
+
+  /// Download Playlist
+  /// Download Playlist
+  static Future<void> downloadPlaylist({
+    required List<Video> videos,
+    required bool audioOnly,
+  }) async {
+    try {
+      // Request Save Location
+      final location = await pickDownloadDirectory();
+
+      if (location == null) {
+        Toast.show(
+          title: "Error",
+          message: "No directory selected. Download canceled.",
+        );
+        return;
+      }
+
+      // Navigate to Download Page Before Starting
+      Get.to(
+        DownloadPlaylist(
+          playlist: videos,
+          audioOnly: audioOnly,
+          savePath: location,
+        ),
+      );
+    } catch (error) {
+      Toast.show(title: "Error", message: "Error preparing download: $error");
+    }
+  }
+
+  /// Download Video and Audio
   static Future<File?> downloadVideo({
     required String videoID,
     required bool audioOnly,
@@ -57,212 +115,136 @@ class API {
     try {
       var ytExplode = yt.YoutubeExplode();
       var video = await ytExplode.videos.get(videoID);
-
-      // Get the manifest for video and audio streams
       var manifest = await ytExplode.videos.streamsClient.getManifest(
         video.id.value,
       );
 
-      // Choose the audio or video stream based on the 'audioOnly' parameter
-      //TODO: Fix Quality
-      var videoStream = manifest.video.first;
-      var audioStreamInfo = manifest.audioOnly.first;
+      var videoStream = manifest.video.withHighestBitrate();
+      var audioStreamInfo = manifest.audioOnly.withHighestBitrate();
 
-      // Create temporary files for video and audio
       final tempDir = await getTemporaryDirectory();
-      final videoFile = File(
-          '${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}_video.mp4');
       final audioFile = File(
           '${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}_audio.m4a');
+      final videoFile = File(
+          '${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}_video.mp4');
 
-      // If audioOnly is true, only download the audio stream
-      if (audioOnly) {
-        var audioStreamClient =
+      // Download audio first
+      if (audioStreamInfo != null) {
+        final audioStreamClient =
             ytExplode.videos.streamsClient.get(audioStreamInfo);
-
-        // Save audio to the created file
-        var audioSink = audioFile.openWrite();
+        final audioSink = audioFile.openWrite();
         await audioStreamClient.pipe(audioSink);
         await audioSink.close();
 
-        // Return the audio file
-        return audioFile;
+        if (!audioFile.existsSync()) {
+          throw Exception(
+              "Audio download failed or file not found: ${audioFile.path}");
+        }
       } else {
-        // If audioOnly is false, download both video and audio streams
-        var videoStreamClient = ytExplode.videos.streamsClient.get(videoStream);
-        var audioStreamClient =
-            ytExplode.videos.streamsClient.get(audioStreamInfo);
-
-        // Save video and audio to the created files
-        var videoSink = videoFile.openWrite();
-        await videoStreamClient.pipe(videoSink);
-        await videoSink.close();
-
-        var audioSink = audioFile.openWrite();
-        await audioStreamClient.pipe(audioSink);
-        await audioSink.close();
-
-        // Combine video and audio (using FFmpeg for proper merging)
-        final outputFile = File(
-            '${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}_output.mp4');
-        await _combineVideoAndAudio(videoFile, audioFile, outputFile);
-
-        // Optionally, move the file to a permanent location if necessary
-        // For now, it's in the temporary directory
-
-        // Show success
-        Toast.show(title: "Success", message: "Download complete!");
-
-        // Clean up temporary files
-        await videoFile.delete();
-        await audioFile.delete();
-
-        // Return the final combined file
-        return outputFile;
+        throw Exception("No suitable audio stream found for ${videoID}");
       }
+
+      // If audio-only, return here
+      if (audioOnly) {
+        return audioFile;
+      }
+
+      // Download video
+      if (videoStream.url.toString().endsWith(".m3u8")) {
+        Toast.show(
+          title: "Processing HLS Stream",
+          message: "This may take a while...",
+        );
+
+        final hlsVideoFile =
+            await _downloadHLSStream(videoStream.url, videoFile);
+        return await _combineVideoAndAudio(hlsVideoFile, audioFile, tempDir);
+      }
+
+      final videoStreamClient = ytExplode.videos.streamsClient.get(videoStream);
+      final videoSink = videoFile.openWrite();
+      await videoStreamClient.pipe(videoSink);
+      await videoSink.close();
+
+      if (!videoFile.existsSync()) {
+        throw Exception(
+            "Video download failed or file not found: ${videoFile.path}");
+      }
+
+      // Combine video and audio
+      return await _combineVideoAndAudio(videoFile, audioFile, tempDir);
     } catch (e) {
-      // Show error message if something goes wrong
       Toast.show(title: "Error", message: "Error: $e");
       return null;
     }
   }
 
-  // Combine Video and Audio into a single file using FFmpeg
-  static Future<void> _combineVideoAndAudio(
-      File videoFile, File audioFile, File outputFile) async {
+  static Future<File> _downloadHLSStream(Uri hlsUrl, File outputFile) async {
+    final tempDir = await getTemporaryDirectory();
+    final tsDir = Directory('${tempDir.path}/hls_segments');
+    await tsDir.create();
+
+    final command = "-i ${hlsUrl.toString()} -c copy ${outputFile.path}";
+    final session = await FFmpegKit.execute(command);
+
+    final returnCode = await session.getReturnCode();
+    if (returnCode!.isValueSuccess()) {
+      return outputFile;
+    } else {
+      throw Exception("Error processing HLS stream: $hlsUrl");
+    }
+  }
+
+  static Future<File> _combineVideoAndAudio(
+      File videoFile, File audioFile, Directory tempDir) async {
     try {
-      // Get file paths
-      final videoPath = videoFile.path;
-      final audioPath = audioFile.path;
-      final outputPath = outputFile.path;
-
-      // Check if the video and audio files exist
-      if (!await videoFile.exists()) {
-        throw Exception("Video file does not exist: $videoPath");
+      if (!videoFile.existsSync()) {
+        throw Exception("Video file does not exist at ${videoFile.path}");
       }
-      if (!await audioFile.exists()) {
-        throw Exception("Audio file does not exist: $audioPath");
+      if (!audioFile.existsSync()) {
+        throw Exception("Audio file does not exist at ${audioFile.path}");
       }
 
-      // Log FFmpeg command for debugging
-      print("Combining video and audio using FFmpeg command:");
+      final outputFile = File(
+          '${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}_output.mp4');
 
-      // Command to combine video and audio
       final command =
-          "-i $videoPath -i $audioPath -c:v mpeg4 -c:a aac $outputPath";
-
-      // Run the FFmpeg command
+          "-i ${videoFile.path} -i ${audioFile.path} -c:v copy -c:a aac ${outputFile.path}";
       final session = await FFmpegKit.execute(command);
 
-      // Check the execution status
       final returnCode = await session.getReturnCode();
-
-      // Capture FFmpeg logs
-      final logs = await session.getAllLogs();
-      logs.forEach(
-        (log) => print(log.getMessage()),
-      ); // Print logs for debugging
-
       if (returnCode!.isValueSuccess()) {
-        print("Video and audio combined successfully");
-        Toast.show(
-            title: "Success",
-            message: "Video and audio combined successfully.");
+        return outputFile;
       } else {
-        throw Exception(
-          "Error combining video and audio: ${returnCode.getValue()}",
-        );
+        throw Exception("FFmpeg failed with code: $returnCode");
       }
     } catch (e) {
-      // Capture any errors and throw exception
-      print("Error during combination: $e");
-      Toast.show(
-        title: "Error",
-        message: "Error combining video and audio: $e",
-      );
-      throw Exception("Error combining video and audio: $e");
+      debugPrint(e.toString());
+      throw Exception("Error during video/audio combination: $e");
     }
   }
 
-  // Zip Files
-  static Future<File?> zipFiles({
-    required List<File> files,
-    required String path,
-  }) async {
-    try {
-      // Create a new archive
-      Archive archive = Archive();
-
-      // Add each file to the archive
-      for (var file in files) {
-        // Get the file name and add it to the archive
-        final fileName = file.uri.pathSegments.last;
-        final fileBytes = await file.readAsBytes();
-        archive.addFile(ArchiveFile(fileName, fileBytes.length, fileBytes));
-      }
-
-      // Create the zip file path using the provided `path`
-      final zipFile = File(path);
-
-      // Write the archive to the zip file
-      final zipBytes = ZipEncoder().encode(archive);
-      await zipFile.writeAsBytes(zipBytes!);
-
-      // Return the zip file
-      return zipFile;
-    } catch (e) {
-      debugPrint("Error Creating ZIP: $e");
-      Toast.show(title: "Error", message: "Error zipping files: $e");
-      return null;
-    }
-  }
-
-  // Download Playlist (if needed)
-  static Future<void> downloadPlaylist({
-    required List<Video> playlist,
-    required bool audioOnly,
-  }) async {
-    // Request storage permission for Android and iOS
+  ///Pick Download Directory
+  static Future<String?> pickDownloadDirectory() async {
     if (Platform.isAndroid || Platform.isIOS) {
-      final storageStatus = await Permission.storage.request();
-      if (!storageStatus.isGranted) {
+      // Request Permission
+      final permissionStatus = await Permission.storage.request();
+      if (!permissionStatus.isGranted) {
         Toast.show(
-            title: "Permission Denied",
-            message: "Storage Permission is Required");
-        return;
+          title: "Permission Denied",
+          message: "Storage access is required!",
+        );
+        return null;
       }
+
+      // Default to External Storage
+      final directory = await getExternalStorageDirectory();
+      return directory?.path;
     }
 
-    // Show folder picker to the user
-    String? dirPath = await FilePicker.platform.getDirectoryPath();
-    if (dirPath == null || dirPath.isEmpty) {
-      Toast.show(title: "Oops!", message: "You Must Choose a Directory");
-      return;
-    }
+    // Desktop or Web - Use File Picker
+    final selectedDirectory = await FilePicker.platform.getDirectoryPath();
 
-    //Go to DownloadPlaylist
-    Get.offAll(
-      () => DownloadPlaylist(
-        playlist: playlist,
-        savePath: dirPath,
-        audioOnly: audioOnly,
-      ),
-    );
-  }
-
-  ///Save Playlist
-  static Future<void> savePlaylist({
-    required Playlist playlist,
-    required String name,
-  }) async {
-    //Save Playlist
-    await LocalData.updateValue(
-      box: "playlists",
-      item: name,
-      value: playlist.toJSON(),
-    );
-
-    //Notify User
-    Toast.show(title: "Done!", message: "\"$name\" Saved Successfully!");
+    return selectedDirectory; // May be null if canceled
   }
 }
