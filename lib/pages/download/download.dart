@@ -114,6 +114,8 @@ class _DownloadPlaylistState extends State<DownloadPlaylist> {
     for (int i = 0; i < total; i++) {
       await action(i);
       _progressNotifier.value = i + 1;
+      await Future.delayed(
+          const Duration(milliseconds: 100)); // Prevent UI freezing
     }
   }
 
@@ -229,10 +231,23 @@ class _DownloadPlaylistState extends State<DownloadPlaylist> {
                     if (isWorking)
                       Column(
                         children: [
-                          Text(currentTask),
-                          LinearProgressIndicator(
-                              value: progress / totalVideos),
-                          Text("$progress / $totalVideos"),
+                          Card(
+                            margin: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.all(10.0),
+                              leading: const CircularProgressIndicator(),
+                              title: Text(currentTask),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  LinearProgressIndicator(
+                                    value: progress / totalVideos,
+                                  ),
+                                  Text("$progress / $totalVideos"),
+                                ],
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     if (isComplete)
@@ -248,7 +263,9 @@ class _DownloadPlaylistState extends State<DownloadPlaylist> {
                             const Text(
                               "Download Complete!",
                               style: TextStyle(
-                                  fontSize: 18.0, color: Colors.green),
+                                fontSize: 18.0,
+                                color: Colors.green,
+                              ),
                             ),
                             const SizedBox(height: 20.0),
                             Buttons.elevatedIcon(

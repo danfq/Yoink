@@ -76,7 +76,7 @@ class _PlaylistsState extends State<Playlists> {
         children: [
           Row(
             children: [
-              //Playlist
+              // Playlist
               Expanded(
                 child: ListTile(
                   shape: RoundedRectangleBorder(
@@ -102,7 +102,7 @@ class _PlaylistsState extends State<Playlists> {
                 ),
               ),
 
-              //Remove Playlist
+              // Remove Playlist
               Buttons.iconFilled(
                 icon: Ionicons.ios_trash_outline,
                 onTap: () {},
