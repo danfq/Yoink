@@ -88,8 +88,13 @@ class Buttons {
     Color? iconColor,
   }) {
     return IconButton.filled(
-      icon: Icon(icon, color: iconColor ?? Theme.of(Get.context!).cardColor),
-      style: IconButton.styleFrom(backgroundColor: backgroundColor),
+      icon: Icon(
+        icon,
+        color: iconColor ?? Theme.of(Get.context!).iconTheme.color,
+      ),
+      style: IconButton.styleFrom(
+        backgroundColor: backgroundColor ?? Theme.of(Get.context!).cardColor,
+      ),
       onPressed: onTap,
     );
   }

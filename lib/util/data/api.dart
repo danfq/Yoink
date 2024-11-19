@@ -10,8 +10,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:yoink/util/handlers/toast.dart';
 import 'package:yoink/util/models/video.dart';
 import 'package:yoink/util/models/playlist.dart' as pl;
-import 'package:archive/archive.dart';
 import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
+import 'package:hive/hive.dart';
 
 class API {
   // YouTube Client
@@ -57,16 +57,18 @@ class API {
 
   ///Delete Playlist by id
   static Future<void> deletePlaylist({required String id}) async {
-    //Playlists
-    final playlists = LocalData.boxData(box: "playlists");
+    //Get direct box reference
+    final playlists = Hive.box("playlists");
+
+    debugPrint(playlists.toString());
 
     //Check if Playlist Exists
     if (playlists.containsKey(id)) {
-      //Remove Playlist
-      await playlists.remove(id);
+      //Remove Playlist - this automatically persists
+      await playlists.delete(id);
 
       //Notify User
-      Toast.show(title: "Done!", message: "\"$id\" Deleted Successfully!");
+      Toast.show(title: "Done!", message: "Playlist Deleted Successfully!");
     } else {
       //Notify User
       Toast.show(
@@ -179,6 +181,7 @@ class API {
     }
   }
 
+  ///Download HLS Stream
   static Future<File> _downloadHLSStream(Uri hlsUrl, File outputFile) async {
     final tempDir = await getTemporaryDirectory();
     final tsDir = Directory('${tempDir.path}/hls_segments');
@@ -195,6 +198,7 @@ class API {
     }
   }
 
+  ///Combine Video & Audio
   static Future<File> _combineVideoAndAudio(
       File videoFile, File audioFile, Directory tempDir) async {
     try {
@@ -206,7 +210,7 @@ class API {
       }
 
       final outputFile = File(
-          '${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}_output.mp4');
+          "${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}_output.mp4");
 
       final command =
           "-i ${videoFile.path} -i ${audioFile.path} -c:v copy -c:a aac ${outputFile.path}";
@@ -245,6 +249,12 @@ class API {
     // Desktop or Web - Use File Picker
     final selectedDirectory = await FilePicker.platform.getDirectoryPath();
 
-    return selectedDirectory; // May be null if canceled
+    //Return Selected Directory
+    return selectedDirectory;
+  }
+
+  ///Remove Playlist
+  static Future<void> removePlaylist({required String id}) async {
+    await deletePlaylist(id: id);
   }
 }

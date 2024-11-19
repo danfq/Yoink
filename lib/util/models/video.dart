@@ -77,106 +77,105 @@ class Video extends StatelessWidget {
   //UI
   @override
   Widget build(BuildContext context) {
-    //Formatted Duration
-    String formattedDuration =
-        "${duration.inHours.toString().padLeft(2, "0")}:${(duration.inMinutes % 60).toString().padLeft(2, "0")}:${(duration.inSeconds % 60).toString().padLeft(2, "0")}";
+    final formattedDuration = "${duration.inHours.toString().padLeft(2, "0")}:"
+        "${(duration.inMinutes % 60).toString().padLeft(2, "0")}:"
+        "${(duration.inSeconds % 60).toString().padLeft(2, "0")}";
 
-    //Formatted Release Date
-    String formattedRelease =
-        "${releaseDate?.day}-${releaseDate?.month}-${releaseDate?.year}";
+    final formattedRelease = releaseDate != null
+        ? "${releaseDate?.day}-${releaseDate?.month}-${releaseDate?.year}"
+        : "No date";
 
-    //TODO: Fix RenderBox Width
-
-    //UI
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: Card(
-        child: ListTile(
-          contentPadding: const EdgeInsets.all(10.0),
-          leading: ClipRRect(
-            borderRadius: BorderRadius.circular(14.0),
-            child: Image.network(thumb),
-          ),
-          title: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  maxLines: 3,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20.0,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+    return Card(
+      child: SizedBox(
+        height: 100,
+        child: Row(
+          children: [
+            // Thumbnail
+            ClipRRect(
+              borderRadius: BorderRadius.circular(14.0),
+              child: SizedBox(
+                width: 120,
+                child: Image.network(
+                  thumb,
+                  fit: BoxFit.cover,
                 ),
               ),
-            ],
-          ),
-          subtitle: Text("$formattedRelease | $formattedDuration"),
-          trailing: showActionButton ?? true
-              ? Buttons.iconFilled(
-                  icon: enableRemove ?? false
-                      ? Ionicons.ios_trash_outline
-                      : Ionicons.ios_add_outline,
-                  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-                  iconColor: Theme.of(context).iconTheme.color,
-                  onTap: () {
-                    //Check Remove
-                    if (enableRemove == true) {
-                      //Confirmation Dialog
-                      Get.defaultDialog(
-                        contentPadding: const EdgeInsets.all(20.0),
-                        title: "Remove Video?",
-                        content: const Text(
-                          "Are you sure you want to remove this Video?",
-                        ),
-                        cancel: Buttons.text(
-                          text: "No",
-                          onTap: () => Get.back(),
-                        ),
-                        confirm: Buttons.elevated(
-                          text: "Yes",
-                          onTap: () {
-                            //On Added
-                            if (onRemoved != null) {
-                              onRemoved!();
-                            }
+            ),
 
-                            //Close Dialog
-                            Get.back();
-                          },
-                        ),
-                      );
-                    } else {
-                      //Confirmation Dialog
-                      Get.defaultDialog(
-                        contentPadding: const EdgeInsets.all(20.0),
-                        title: "Add Video?",
-                        content: const Text(
-                          "Would you like to add this Video to your Download Playlist?",
-                        ),
-                        cancel: Buttons.text(
-                          text: "No",
-                          onTap: () => Get.back(),
-                        ),
-                        confirm: Buttons.elevated(
-                          text: "Yes",
-                          onTap: () {
-                            //On Added
-                            if (onAdded != null) {
-                              onAdded!(this);
-                            }
-
-                            //Close Dialog
-                            Get.back();
-                          },
-                        ),
-                      );
-                    }
-                  },
-                )
-              : null,
+            // Details
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ListTile(
+                  title: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  subtitle: Text("$formattedDuration | $formattedRelease"),
+                  trailing: showActionButton == true
+                      ? Buttons.iconFilled(
+                          icon: enableRemove == true
+                              ? Ionicons.ios_trash_outline
+                              : Ionicons.ios_add_outline,
+                          onTap: () => _handleAction(context),
+                        )
+                      : null,
+                ),
+              ),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+
+  void _handleAction(BuildContext context) {
+    if (enableRemove == true) {
+      _showRemoveDialog();
+    } else {
+      _showAddDialog();
+    }
+  }
+
+  void _showRemoveDialog() {
+    Get.defaultDialog(
+      contentPadding: const EdgeInsets.all(20.0),
+      title: "Remove Video?",
+      content: const Text("Are you sure you want to remove this Video?"),
+      cancel: Buttons.text(
+        text: "No",
+        onTap: () => Get.back(),
+      ),
+      confirm: Buttons.elevated(
+        text: "Yes",
+        onTap: () {
+          if (onRemoved != null) onRemoved!();
+          Get.back();
+        },
+      ),
+    );
+  }
+
+  void _showAddDialog() {
+    Get.defaultDialog(
+      contentPadding: const EdgeInsets.all(20.0),
+      title: "Add Video?",
+      content: const Text(
+        "Would you like to add this Video to your Download Playlist?",
+      ),
+      cancel: Buttons.text(
+        text: "No",
+        onTap: () => Get.back(),
+      ),
+      confirm: Buttons.elevated(
+        text: "Yes",
+        onTap: () {
+          if (onAdded != null) onAdded!(this);
+          Get.back();
+        },
       ),
     );
   }

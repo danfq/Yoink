@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:get/route_manager.dart';
-import 'package:yoink/pages/download/download.dart';
 import 'package:yoink/pages/download/verify.dart';
+import 'package:yoink/util/data/api.dart';
 import 'package:yoink/util/data/local.dart';
 import 'package:yoink/util/handlers/anim.dart';
 import 'package:yoink/util/models/playlist.dart';
@@ -70,15 +70,17 @@ class _PlaylistsState extends State<Playlists> {
   Widget _buildExpandableTile(Playlist playlist) {
     final bool isExpanded = expandedState[playlist.id] ?? false;
 
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14.0)),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              // Playlist
-              Expanded(
-                child: ListTile(
+    return Row(
+      children: [
+        Expanded(
+          child: Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14.0),
+            ),
+            child: Column(
+              children: [
+                // Playlist Tile
+                ListTile(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14.0),
                   ),
@@ -100,51 +102,74 @@ class _PlaylistsState extends State<Playlists> {
                     });
                   },
                 ),
-              ),
-
-              // Remove Playlist
-              Buttons.iconFilled(
-                icon: Ionicons.ios_trash_outline,
-                onTap: () {},
-              ),
-            ],
-          ),
-          if (isExpanded)
-            Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Buttons.elevatedIcon(
-                      text: "Download",
-                      icon: Ionicons.ios_download_outline,
-                      onTap: () {
-                        _downloadPlaylist(playlist);
-                      }),
-                  const SizedBox(height: 10.0),
-                  ...playlist.videos.map(
-                    (video) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Row(
-                        children: [
-                          Video(
-                            id: video.id,
-                            title: video.title,
-                            thumb: video.thumb,
-                            channel: video.channel,
-                            duration: video.duration,
-                            releaseDate: video.releaseDate,
-                            showActionButton: false,
+                if (isExpanded)
+                  Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Buttons.elevatedIcon(
+                          text: "Download",
+                          icon: Ionicons.ios_download_outline,
+                          onTap: () {
+                            _downloadPlaylist(playlist);
+                          },
+                        ),
+                        const SizedBox(height: 10.0),
+                        ...playlist.videos.map(
+                          (video) => Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: Video(
+                              id: video.id,
+                              title: video.title,
+                              thumb: video.thumb,
+                              channel: video.channel,
+                              duration: video.duration,
+                              releaseDate: video.releaseDate,
+                              showActionButton: false,
+                            ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
+              ],
             ),
-        ],
-      ),
+          ),
+        ),
+        const SizedBox(width: 8.0),
+
+        //Remove Playlist
+        Buttons.iconFilled(
+          icon: Ionicons.ios_trash_outline,
+          onTap: () async {
+            //Confirmation
+            await Get.defaultDialog(
+              title: "Remove Playlist?",
+              middleText: "Are you sure you want to remove this playlist?",
+              cancel: Buttons.text(
+                text: "Cancel",
+                onTap: () => Get.back(),
+              ),
+              confirm: Buttons.elevated(
+                text: "Remove",
+                onTap: () async {
+                  //Remove Playlist Locally
+                  await API.deletePlaylist(id: playlist.id);
+
+                  //Remove from UI
+                  setState(() {
+                    playlists.removeWhere((item) => item.id == playlist.id);
+                  });
+
+                  //Close Dialog
+                  Get.back();
+                },
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 
