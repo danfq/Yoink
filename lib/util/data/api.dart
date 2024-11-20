@@ -247,8 +247,8 @@ class API {
       }
 
       // Default to External Storage
-      final directory = await getExternalStorageDirectory();
-      return directory?.path;
+      final directory = await getApplicationDocumentsDirectory();
+      return directory.path;
     }
 
     // Desktop or Web - Use File Picker
