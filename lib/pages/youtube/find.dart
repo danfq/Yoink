@@ -78,10 +78,16 @@ class _FindVideosState extends State<FindVideos> {
             //Results List
             if (query.isEmpty)
               //Nothing Searched Yet
-              const Center(
-                child: Text(
-                  "Search Results Will Appear Here",
-                  style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.w500),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    //Animation
+                    AnimHandler.asset(animation: "empty", reverse: true),
+
+                    //Text
+                    const Text("Search Results Will Appear Here"),
+                  ],
                 ),
               )
             else

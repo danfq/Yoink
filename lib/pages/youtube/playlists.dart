@@ -23,7 +23,7 @@ class _PlaylistsState extends State<Playlists> {
               .map(
                 (entry) => Playlist(
                   id: entry.key,
-                  name: entry.key,
+                  name: entry.value["name"] ?? entry.key,
                   videos: (entry.value["videos"] as List<dynamic>?)
                           ?.map((video) =>
                               Video.fromJSON(video as Map<dynamic, dynamic>))
