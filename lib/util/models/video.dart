@@ -88,51 +88,50 @@ class Video extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(20.0),
       child: Card(
-        child: SizedBox(
-          height: 100,
-          child: Row(
-            children: [
-              // Thumbnail
-              Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(14.0),
-                  child: SizedBox(
-                    width: 120,
-                    child: Image.network(
-                      thumb,
-                      fit: BoxFit.cover,
-                    ),
+        child: Row(
+          children: [
+            // Thumbnail
+            Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(14.0),
+                child: SizedBox(
+                  width: 120,
+                  child: Image.network(
+                    thumb,
+                    fit: BoxFit.cover,
                   ),
                 ),
               ),
+            ),
 
-              // Details
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: ListTile(
-                    title: Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 18.0,
-                        fontWeight: FontWeight.bold,
-                      ),
+            // Details
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ListTile(
+                  title: Text(
+                    title,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.bold,
                     ),
-                    subtitle: Text("$formattedDuration | $formattedRelease"),
-                    trailing: showActionButton == true
-                        ? Buttons.iconFilled(
-                            icon: enableRemove == true
-                                ? Ionicons.ios_trash_outline
-                                : Ionicons.ios_add_outline,
-                            onTap: () => _handleAction(context),
-                          )
-                        : null,
                   ),
+                  subtitle: Text("$formattedDuration | $formattedRelease"),
+                  trailing: showActionButton == true
+                      ? Buttons.iconFilled(
+                          icon: enableRemove == true
+                              ? Ionicons.ios_trash_outline
+                              : Ionicons.ios_add_outline,
+                          onTap: () => _handleAction(context),
+                        )
+                      : null,
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
