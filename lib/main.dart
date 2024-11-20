@@ -5,6 +5,7 @@ import 'package:get/route_manager.dart';
 import 'package:toastification/toastification.dart';
 import 'package:yoink/pages/intro/intro.dart';
 import 'package:yoink/pages/settings/settings.dart';
+import 'package:yoink/pages/settings/team.dart';
 import 'package:yoink/pages/yoink.dart';
 import 'package:yoink/pages/youtube/playlists.dart';
 import 'package:yoink/util/handlers/main.dart';
@@ -35,6 +36,7 @@ void main() async {
               GetPage(name: "/intro", page: () => Intro()),
               GetPage(name: "/settings", page: () => const Settings()),
               GetPage(name: "/playlists", page: () => const Playlists()),
+              GetPage(name: "/team", page: () => Team()),
             ],
           );
         },

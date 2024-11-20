@@ -205,6 +205,9 @@ class _SettingsState extends State<Settings> {
                   title: const Text("Default Video Quality"),
                   value: Obx(() => Text(_defaultVideoQuality.value)),
                   onPressed: (context) => _showQualitySelector(isVideo: true),
+                  description: const Text(
+                    "If you're worried about Data Usage, you can set this to Fastest.",
+                  ),
                 ),
 
                 //Default Audio Quality
@@ -213,6 +216,40 @@ class _SettingsState extends State<Settings> {
                   title: const Text("Default Audio Quality"),
                   value: Obx(() => Text(_defaultAudioQuality.value)),
                   onPressed: (context) => _showQualitySelector(isVideo: false),
+                  description: const Text(
+                    "If you're worried about Data Usage, you can set this to Fastest.",
+                  ),
+                ),
+              ],
+            ),
+
+            //Team & Licenses
+            SettingsSection(
+              title: const Text("Team & Licenses"),
+              tiles: [
+                //Team
+                SettingsTile.navigation(
+                  leading: const Icon(Ionicons.ios_people_outline),
+                  title: const Text("Team"),
+                  onPressed: (context) => Get.toNamed("/team"),
+                ),
+
+                //Licenses
+                SettingsTile.navigation(
+                  leading: const Icon(Ionicons.ios_book_outline),
+                  title: const Text("Licenses"),
+                  onPressed: (context) => Get.to(
+                    () => LicensePage(
+                      applicationName: "Yoink",
+                      applicationIcon: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Image.asset(
+                          "assets/img/logo.png",
+                          height: 120.0,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
