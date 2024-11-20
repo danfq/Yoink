@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_advanced_drawer/flutter_advanced_drawer.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
+import 'package:get/route_manager.dart';
+import 'package:yoink/pages/settings/settings.dart';
 import 'package:yoink/pages/youtube/find.dart';
 import 'package:yoink/pages/youtube/playlists.dart';
 import 'package:yoink/util/widgets/buttons.dart';
@@ -115,6 +117,16 @@ class _YoinkState extends State<Yoink> {
             },
           ),
           title: Text(_title()),
+          actions: [
+            //Settings
+            Padding(
+              padding: const EdgeInsets.only(right: 10.0),
+              child: Buttons.icon(
+                icon: Ionicons.ios_settings_outline,
+                onTap: () => Get.to(() => const Settings()),
+              ),
+            ),
+          ],
         ),
         body: SafeArea(child: _body()),
       ),

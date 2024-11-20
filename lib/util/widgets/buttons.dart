@@ -93,7 +93,8 @@ class Buttons {
         color: iconColor ?? Theme.of(Get.context!).iconTheme.color,
       ),
       style: IconButton.styleFrom(
-        backgroundColor: backgroundColor ?? Theme.of(Get.context!).cardColor,
+        backgroundColor:
+            backgroundColor ?? Theme.of(Get.context!).scaffoldBackgroundColor,
       ),
       onPressed: onTap,
     );

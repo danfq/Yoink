@@ -55,16 +55,14 @@ class API {
     Toast.show(title: "Done!", message: "Playlist Saved Successfully!");
   }
 
-  ///Delete Playlist by id
+  ///Delete Playlist by `id`
   static Future<void> deletePlaylist({required String id}) async {
     //Get direct box reference
     final playlists = Hive.box("playlists");
 
-    debugPrint(playlists.toString());
-
     //Check if Playlist Exists
     if (playlists.containsKey(id)) {
-      //Remove Playlist - this automatically persists
+      //Remove Playlist
       await playlists.delete(id);
 
       //Notify User
@@ -78,8 +76,7 @@ class API {
     }
   }
 
-  /// Download Playlist
-  /// Download Playlist
+  ///Download Playlist
   static Future<void> downloadPlaylist({
     required List<Video> videos,
     required bool audioOnly,
@@ -121,8 +118,19 @@ class API {
         video.id.value,
       );
 
-      var videoStream = manifest.video.withHighestBitrate();
-      var audioStreamInfo = manifest.audioOnly.withHighestBitrate();
+      //Get Default Video & Audio Qualities
+      final defaultVideoQuality =
+          LocalData.boxData(box: "settings")["defaultVideoQuality"];
+      final defaultAudioQuality =
+          LocalData.boxData(box: "settings")["defaultAudioQuality"];
+
+      //Streams
+      var videoStream = defaultVideoQuality == "Highest Bitrate"
+          ? manifest.video.withHighestBitrate()
+          : manifest.video.first;
+      var audioStreamInfo = defaultAudioQuality == "Highest Bitrate"
+          ? manifest.audioOnly.withHighestBitrate()
+          : manifest.audioOnly.first;
 
       final tempDir = await getTemporaryDirectory();
       final audioFile = File(
@@ -131,19 +139,16 @@ class API {
           '${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}_video.mp4');
 
       // Download audio first
-      if (audioStreamInfo != null) {
-        final audioStreamClient =
-            ytExplode.videos.streamsClient.get(audioStreamInfo);
-        final audioSink = audioFile.openWrite();
-        await audioStreamClient.pipe(audioSink);
-        await audioSink.close();
+      final audioStreamClient =
+          ytExplode.videos.streamsClient.get(audioStreamInfo);
+      final audioSink = audioFile.openWrite();
+      await audioStreamClient.pipe(audioSink);
+      await audioSink.close();
 
-        if (!audioFile.existsSync()) {
-          throw Exception(
-              "Audio download failed or file not found: ${audioFile.path}");
-        }
-      } else {
-        throw Exception("No suitable audio stream found for ${videoID}");
+      if (!audioFile.existsSync()) {
+        throw Exception(
+          "Audio download failed or file not found: ${audioFile.path}",
+        );
       }
 
       // If audio-only, return here
