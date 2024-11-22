@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -9,7 +11,9 @@ class LocalData {
   ///Initialize Hive Storage
   static Future<void> init() async {
     //App Data Directory
-    final appDataDir = await getApplicationDocumentsDirectory();
+    final appDataDir = kIsWeb
+        ? Directory("/downloads")
+        : await getApplicationDocumentsDirectory();
 
     //Local Path
     final localPath = "${appDataDir.path}/data";

@@ -1,10 +1,10 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/route_manager.dart';
 import 'package:yoink/pages/download/download.dart';
 import 'package:yoink/pages/download/verify.dart';
 import 'package:yoink/util/data/local.dart';
-import 'package:yoink/util/themes/controller.dart';
 import 'package:yoink/util/widgets/buttons.dart';
 import 'package:yoink/util/widgets/input.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart' as yt;
@@ -17,15 +17,22 @@ import 'package:yoink/util/models/playlist.dart' as pl;
 import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
 import 'package:hive/hive.dart';
 
+///API
 class API {
-  // YouTube Client
+  ///YouTube Explode Client
   static final yt.YoutubeExplode _youtube = yt.YoutubeExplode();
 
-  /// Search by Query
+  ///Search by Query
   static Future<List<Video>> searchByQuery({required String query}) async {
+    //Videos
     List<Video> videos = [];
+
+    //Attempt to Get Videos by Query
     try {
+      //Video Search List
       final videoSearchList = await _youtube.search.search(query);
+
+      //Parse Videos
       for (final videoItem in videoSearchList) {
         final video = Video(
           id: videoItem.id.value,
@@ -327,8 +334,10 @@ class API {
         return null;
       }
 
-      // Default to External Storage
-      final directory = await getApplicationDocumentsDirectory();
+      // Default to downloads directory for web, app documents for mobile
+      final directory = kIsWeb
+          ? Directory("/downloads")
+          : await getApplicationDocumentsDirectory();
       return directory.path;
     }
 
