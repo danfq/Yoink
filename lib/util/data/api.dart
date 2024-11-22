@@ -2,7 +2,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/route_manager.dart';
 import 'package:yoink/pages/download/download.dart';
+import 'package:yoink/pages/download/verify.dart';
 import 'package:yoink/util/data/local.dart';
+import 'package:yoink/util/themes/controller.dart';
+import 'package:yoink/util/widgets/buttons.dart';
+import 'package:yoink/util/widgets/input.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart' as yt;
 import 'package:path_provider/path_provider.dart';
 import 'package:file_picker/file_picker.dart';
@@ -103,6 +107,83 @@ class API {
       );
     } catch (error) {
       Toast.show(title: "Error", message: "Error preparing download: $error");
+    }
+  }
+
+  ///Import Playlist
+  static Future<void> importPlaylist() async {
+    try {
+      // Show Dialog for URL Input
+      final urlController = TextEditingController();
+
+      //Get URL
+      final String? playlistUrl = await Get.defaultDialog(
+        title: "Import Playlist",
+        content: Input(
+          controller: urlController,
+          backgroundColor: Theme.of(Get.context!).scaffoldBackgroundColor,
+          placeholder: "Playlist URL",
+        ),
+        confirm: Buttons.elevated(
+          text: "Import",
+          onTap: () => Get.back(result: urlController.text),
+        ),
+        cancel: Buttons.text(
+          text: "Cancel",
+          onTap: () => Get.back(),
+        ),
+      );
+
+      // Check if URL was provided
+      if (playlistUrl == null || playlistUrl.isEmpty) {
+        return;
+      }
+
+      // Show loading indicator
+      Get.defaultDialog(
+        title: "Getting Information...",
+        content: const Center(
+          child: CircularProgressIndicator(),
+        ),
+        barrierDismissible: false,
+      );
+
+      // Get playlist
+      final playlist = await _youtube.playlists.get(playlistUrl);
+
+      // Get all videos
+      final videos = await _youtube.playlists
+          .getVideos(playlist.id)
+          .map((video) => Video(
+                id: video.id.value,
+                title: video.title,
+                thumb: video.thumbnails.highResUrl,
+                channel: video.author,
+                duration: video.duration ?? Duration.zero,
+                releaseDate: video.uploadDate ?? DateTime.now(),
+              ))
+          .toList();
+
+      // Close loading dialog
+      Get.back();
+
+      // Navigate to verify screen
+      Get.to(
+        () => VerifyPlaylist(
+          videos: videos,
+          showSave: true,
+        ),
+      );
+    } catch (error) {
+      // Close loading dialog if open
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
+
+      Toast.show(
+        title: "Error",
+        message: "Failed to import playlist: $error",
+      );
     }
   }
 

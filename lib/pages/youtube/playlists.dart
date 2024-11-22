@@ -48,22 +48,64 @@ class _PlaylistsState extends State<Playlists> {
 
   @override
   Widget build(BuildContext context) {
-    return playlists.isNotEmpty
-        ? ListView.builder(
-            itemCount: playlists.length,
-            itemBuilder: (context, index) {
-              // Playlist
-              final Playlist playlist = playlists[index];
+    return Stack(
+      children: [
+        //Playlists
+        playlists.isNotEmpty
+            ? ListView.builder(
+                itemCount: playlists.length,
+                itemBuilder: (context, index) {
+                  // Playlist
+                  final Playlist playlist = playlists[index];
 
-              return Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: _buildExpandableTile(playlist),
-              );
-            },
-          )
-        : Center(
-            child: AnimHandler.asset(animation: "empty"),
-          );
+                  return Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: _buildExpandableTile(playlist),
+                  );
+                },
+              )
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  //Animation
+                  Center(
+                    child: AnimHandler.asset(animation: "empty", reverse: true),
+                  ),
+
+                  //Spacing
+                  const SizedBox(height: 20),
+
+                  //Import Playlist
+                  Center(
+                    child: Buttons.elevatedIcon(
+                      text: "Import Playlist",
+                      icon: Ionicons.ios_add_outline,
+                      onTap: () async {
+                        //Initialize Import Procedure
+                        await API.importPlaylist();
+                      },
+                    ),
+                  ),
+                ],
+              ),
+
+        //Import Playlist - Bottom Right
+        Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Visibility(
+            visible: playlists.isNotEmpty,
+            child: Align(
+              alignment: Alignment.bottomRight,
+              child: Buttons.iconFilled(
+                icon: Ionicons.ios_add_outline,
+                backgroundColor: Theme.of(context).cardColor,
+                onTap: () {},
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   /// Builds an expandable tile for a playlist
