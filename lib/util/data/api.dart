@@ -14,8 +14,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:yoink/util/handlers/toast.dart';
 import 'package:yoink/util/models/video.dart';
 import 'package:yoink/util/models/playlist.dart' as pl;
-import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
 import 'package:hive/hive.dart';
+import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
 
 ///API
 class API {
@@ -48,6 +48,9 @@ class API {
         }
       }
     } catch (error) {
+      //Debug
+      debugPrint(error.toString());
+
       Toast.show(title: "Error", message: "Error Searching: $error");
     }
     return videos;
@@ -323,9 +326,12 @@ class API {
 
   ///Pick Download Directory
   static Future<String?> pickDownloadDirectory() async {
-    if (Platform.isAndroid || Platform.isIOS) {
+    //Android
+    if (Platform.isAndroid) {
       // Request Permission
-      final permissionStatus = await Permission.storage.request();
+      final permissionStatus = await Permission.manageExternalStorage.request();
+
+      //Check Permission
       if (!permissionStatus.isGranted) {
         Toast.show(
           title: "Permission Denied",
@@ -339,6 +345,21 @@ class API {
           ? Directory("/downloads")
           : await getApplicationDocumentsDirectory();
       return directory.path;
+    }
+
+    //iOS
+    if (Platform.isIOS) {
+      // Request Permission
+      final permissionStatus = await Permission.storage.request();
+
+      //Check Permission
+      if (!permissionStatus.isGranted) {
+        Toast.show(
+          title: "Permission Denied",
+          message: "Storage access is required!",
+        );
+        return null;
+      }
     }
 
     // Desktop or Web - Use File Picker
