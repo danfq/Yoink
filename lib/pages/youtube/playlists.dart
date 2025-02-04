@@ -5,6 +5,7 @@ import 'package:yoink/pages/download/verify.dart';
 import 'package:yoink/util/data/api.dart';
 import 'package:yoink/util/data/local.dart';
 import 'package:yoink/util/handlers/anim.dart';
+import 'package:yoink/util/handlers/playlists.dart';
 import 'package:yoink/util/models/playlist.dart';
 import 'package:yoink/util/models/video.dart';
 import 'package:yoink/util/widgets/buttons.dart';
@@ -82,7 +83,7 @@ class _PlaylistsState extends State<Playlists> {
                       icon: Ionicons.ios_add_outline,
                       onTap: () async {
                         //Initialize Import Procedure
-                        await API.importPlaylist();
+                        await PlaylistHandler.import();
                       },
                     ),
                   ),
@@ -197,7 +198,7 @@ class _PlaylistsState extends State<Playlists> {
                 text: "Remove",
                 onTap: () async {
                   //Remove Playlist Locally
-                  await API.deletePlaylist(id: playlist.id);
+                  await PlaylistHandler.delete(id: playlist.id);
 
                   //Remove from UI
                   setState(() {

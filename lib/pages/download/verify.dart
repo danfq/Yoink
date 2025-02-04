@@ -4,6 +4,7 @@ import 'package:get/route_manager.dart';
 import 'package:uuid/uuid.dart';
 import 'package:yoink/util/data/api.dart';
 import 'package:yoink/util/handlers/anim.dart';
+import 'package:yoink/util/handlers/playlists.dart';
 import 'package:yoink/util/handlers/toast.dart';
 import 'package:yoink/util/models/playlist.dart';
 import 'package:yoink/util/models/video.dart' as vid;
@@ -211,7 +212,7 @@ class _VerifyPlaylistState extends State<VerifyPlaylist> {
                             Get.back();
 
                             //Initiate Save Procedure
-                            await API.savePlaylist(
+                            await PlaylistHandler.save(
                               playlist: Playlist(
                                 id: const Uuid().v4(),
                                 name: name,
@@ -261,7 +262,7 @@ class _VerifyPlaylistState extends State<VerifyPlaylist> {
                       text: "Yes",
                       onTap: () async {
                         //Initiate Download Procedure
-                        await API.downloadPlaylist(
+                        await PlaylistHandler.download(
                           videos: _videos,
                           audioOnly: _audioOnly,
                         );
