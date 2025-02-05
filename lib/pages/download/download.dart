@@ -12,6 +12,7 @@ import 'package:yoink/util/handlers/toast.dart';
 import 'package:yoink/util/models/video.dart';
 import 'package:yoink/util/widgets/buttons.dart';
 import 'package:yoink/util/widgets/main.dart';
+import 'package:path/path.dart' as p;
 
 class DownloadPlaylist extends StatefulWidget {
   const DownloadPlaylist({
@@ -67,24 +68,21 @@ class _DownloadPlaylistState extends State<DownloadPlaylist> {
         total: widget.playlist.length,
         action: (index) async {
           final video = widget.playlist[index];
-          final file =
-              await _downloadVideo(video, "${index + 1} - ${video.title}");
+
+          // Sanitize the filename before downloading
+          final sanitizedFileName =
+              _sanitizeFilename("${index + 1} - ${video.title}");
+
+          // Download the video directly to the target path
+          final file = await _downloadVideo(video, sanitizedFileName);
+
+          // Add File to List
           downloadedFiles.add(file);
         },
       );
 
-      // Step 2: Rename Files
-      await _performTask(
-        taskName: "Renaming Videos",
-        total: downloadedFiles.length,
-        action: (index) async {
-          final renamedFile = await _renameFile(
-            downloadedFiles[index],
-            "${index + 1} - ${widget.playlist[index].title}",
-          );
-          downloadedFiles[index] = renamedFile;
-        },
-      );
+      // Step 2: Rename Files (if necessary)
+      // In this case, we can skip renaming since we are saving directly with the correct name.
 
       // Step 3: ZIP Files
       await _zipVideos(downloadedFiles);
@@ -93,9 +91,15 @@ class _DownloadPlaylistState extends State<DownloadPlaylist> {
       setState(() {
         isComplete = true;
       });
+
+      // Notify User
       _showToast("Success", "Download Complete!");
-    } catch (e) {
-      _showToast("Error", e.toString());
+    } catch (error) {
+      // Show Error
+      _showToast("Error", error.toString());
+
+      // Debug
+      debugPrint(error.toString());
     } finally {
       setState(() {
         isWorking = false;
@@ -114,8 +118,7 @@ class _DownloadPlaylistState extends State<DownloadPlaylist> {
     for (int i = 0; i < total; i++) {
       await action(i);
       _progressNotifier.value = i + 1;
-      await Future.delayed(
-          const Duration(milliseconds: 100)); // Prevent UI freezing
+      await Future.delayed(const Duration(milliseconds: 100));
     }
   }
 
@@ -130,29 +133,28 @@ class _DownloadPlaylistState extends State<DownloadPlaylist> {
     }
 
     final extension = widget.audioOnly ? "mp3" : "mp4";
-    final filePath = "${widget.savePath}/$fileName.$extension";
-    return file.copy(filePath);
+    final filePath = p.join(widget.savePath, "$fileName.$extension");
+
+    // Debug: Check if the file exists before copying
+    if (!file.existsSync()) {
+      throw Exception("Downloaded file does not exist: ${file.path}");
+    }
+
+    // Copy the file to the target location
+    return file.renameSync(filePath); // Rename directly to the target path
   }
 
-  Future<File> _renameFile(File file, String newName) async {
-    final String newPath =
-        "${widget.savePath}/$newName.${widget.audioOnly ? "mp3" : "mp4"}";
-    return compute(_renameFileIsolate, [file.path, newPath]);
-  }
-
-  static File _renameFileIsolate(List<String> args) {
-    final File file = File(args[0]);
-    final String newPath = args[1];
-    final renamedFile = file.renameSync(newPath);
-    return renamedFile;
+  static String _sanitizeFilename(String filename) {
+    // Replace invalid characters with an underscore or remove them
+    return filename.replaceAll(RegExp(r'[<>:"/\\|?*]'), "_");
   }
 
   Future<void> _zipVideos(List<File> files) async {
     _currentTaskNotifier.value = "Zipping Files";
     _progressNotifier.value = 0;
 
-    final zipPath =
-        "${widget.savePath}/playlist_${DateTime.now().millisecondsSinceEpoch}.zip";
+    final zipPath = p.join(widget.savePath,
+        "playlist_${DateTime.now().millisecondsSinceEpoch}.zip");
 
     final receivePort = ReceivePort();
     await Isolate.spawn(
@@ -162,7 +164,7 @@ class _DownloadPlaylistState extends State<DownloadPlaylist> {
 
     final result = await receivePort.first;
     if (result is! String || result != "success") {
-      throw Exception("Failed to zip files.");
+      throw Exception("Failed to zip files: $result");
     }
 
     for (final file in files) {
@@ -181,7 +183,7 @@ class _DownloadPlaylistState extends State<DownloadPlaylist> {
         final file = File(filePath);
         final fileBytes = file.readAsBytesSync();
         archive.addFile(ArchiveFile(
-          file.path.split('/').last,
+          p.basename(file.path), // Use basename to avoid full path in zip
           fileBytes.length,
           fileBytes,
         ));
@@ -205,10 +207,7 @@ class _DownloadPlaylistState extends State<DownloadPlaylist> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: MainWidgets.appBar(
-        title: const Text("Download Playlist"),
-        allowBack: false,
-      ),
+      appBar: MainWidgets.appBar(title: const Text("Download Playlist")),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: ValueListenableBuilder<int>(
@@ -225,7 +224,7 @@ class _DownloadPlaylistState extends State<DownloadPlaylist> {
                         child: Buttons.elevatedIcon(
                           text: "Start Download",
                           icon: Ionicons.ios_download_outline,
-                          onTap: _startDownload,
+                          onTap: () => _startDownload(),
                         ),
                       ),
                     if (isWorking)

@@ -16,7 +16,7 @@ class LocalData {
         : await getApplicationDocumentsDirectory();
 
     //Local Path
-    final localPath = "${appDataDir.path}/data";
+    final localPath = "${appDataDir.path}/Yoink";
 
     //Initialize Hive
     Hive.init(localPath);

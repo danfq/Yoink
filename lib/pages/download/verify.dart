@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:get/route_manager.dart';
 import 'package:uuid/uuid.dart';
-import 'package:yoink/util/data/api.dart';
 import 'package:yoink/util/handlers/anim.dart';
 import 'package:yoink/util/handlers/playlists.dart';
 import 'package:yoink/util/handlers/toast.dart';
@@ -245,29 +244,11 @@ class _VerifyPlaylistState extends State<VerifyPlaylist> {
               child: Buttons.elevatedIcon(
                 text: "Download Playlist",
                 icon: Ionicons.ios_download_outline,
-                onTap: () {
-                  //Confirmation Dialog
-                  Get.defaultDialog(
-                    contentPadding: const EdgeInsets.all(20.0),
-                    title: "Are you sure?",
-                    content: const Text(
-                      "From this point on, you won't be able to edit your Playlist.",
-                      textAlign: TextAlign.center,
-                    ),
-                    cancel: Buttons.text(
-                      text: "No",
-                      onTap: () => Get.back(),
-                    ),
-                    confirm: Buttons.elevated(
-                      text: "Yes",
-                      onTap: () async {
-                        //Initiate Download Procedure
-                        await PlaylistHandler.download(
-                          videos: _videos,
-                          audioOnly: _audioOnly,
-                        );
-                      },
-                    ),
+                onTap: () async {
+                  //Initiate Download Procedure
+                  await PlaylistHandler.download(
+                    videos: _videos,
+                    audioOnly: _audioOnly,
                   );
                 },
               ),
