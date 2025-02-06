@@ -55,7 +55,7 @@ class FFmpegHandler {
         );
       }
 
-      // Output File
+      //Output File
       final outputFile = File(
         "${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}_output.mp4",
       );
@@ -72,21 +72,36 @@ class FFmpegHandler {
         "aac",
         outputFile.path,
       ];
+
+      //FFmpeg Result
       final result = await Process.run(command[0], command.sublist(1));
 
       if (result.exitCode == 0) {
         //Debug
         debugPrint(
-            "[WINDOWS] Video and Audio Combined Successfully: ${outputFile.path}");
+          "[WINDOWS] Video and Audio Combined Successfully: ${outputFile.path}",
+        );
+
+        //Delete Audio & Video Files
+        await audioFile.delete();
+        await videoFile.delete();
 
         //Return Output File
         return outputFile;
       } else {
+        //Delete Audio & Video Files
+        await audioFile.delete();
+        await videoFile.delete();
+
         throw Exception(
           "[WINDOWS] FFmpeg Failed with Code: ${result.exitCode}\n${result.stderr}",
         );
       }
     } catch (error) {
+      //Delete Audio & Video Files
+      await audioFile.delete();
+      await videoFile.delete();
+
       //Debug
       debugPrint(error.toString());
 

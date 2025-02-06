@@ -67,9 +67,11 @@ class API {
 
       final tempDir = await getTemporaryDirectory();
       final audioFile = File(
-          '${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}_audio.m4a');
+        "${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}_audio.m4a",
+      );
       final videoFile = File(
-          '${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}_video.mp4');
+        "${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}_video.mp4",
+      );
 
       // Download audio first
       final audioStreamClient =
@@ -80,7 +82,8 @@ class API {
 
       if (!audioFile.existsSync()) {
         throw Exception(
-            "Audio download failed or file not found: ${audioFile.path}");
+          "Audio download failed or file not found: ${audioFile.path}",
+        );
       }
 
       // If audio-only, return here
@@ -91,12 +94,15 @@ class API {
       // Download video
       if (videoStream.url.toString().endsWith(".m3u8")) {
         Toast.show(
-            title: "Processing HLS Stream",
-            message: "This may take a while...");
+          title: "Processing HLS Stream",
+          message: "This may take a while...",
+        );
 
         // HLS Video File
-        final hlsVideoFile =
-            await _downloadHLSStream(videoStream.url, videoFile);
+        final hlsVideoFile = await _downloadHLSStream(
+          videoStream.url,
+          videoFile,
+        );
 
         // Combine Video & Audio using FFmpegHandler
         return await FFmpegHandler.combineVideoAndAudio(
@@ -113,7 +119,8 @@ class API {
 
       if (!videoFile.existsSync()) {
         throw Exception(
-            "Video download failed or file not found: ${videoFile.path}");
+          "Video download failed or file not found: ${videoFile.path}",
+        );
       }
 
       // Combine video and audio using FFmpegHandler

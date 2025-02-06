@@ -141,7 +141,7 @@ class _DownloadPlaylistState extends State<DownloadPlaylist> {
     }
 
     // Copy the file to the target location
-    return file.renameSync(filePath); // Rename directly to the target path
+    return file.renameSync(filePath);
   }
 
   static String _sanitizeFilename(String filename) {
@@ -153,8 +153,10 @@ class _DownloadPlaylistState extends State<DownloadPlaylist> {
     _currentTaskNotifier.value = "Zipping Files";
     _progressNotifier.value = 0;
 
-    final zipPath = p.join(widget.savePath,
-        "playlist_${DateTime.now().millisecondsSinceEpoch}.zip");
+    final zipPath = p.join(
+      widget.savePath,
+      "playlist_${DateTime.now().millisecondsSinceEpoch}.zip",
+    );
 
     final receivePort = ReceivePort();
     await Isolate.spawn(
@@ -166,10 +168,6 @@ class _DownloadPlaylistState extends State<DownloadPlaylist> {
     if (result is! String || result != "success") {
       throw Exception("Failed to zip files: $result");
     }
-
-    for (final file in files) {
-      await file.delete();
-    }
   }
 
   static void _zipFilesInIsolate(List<dynamic> args) {
@@ -178,19 +176,35 @@ class _DownloadPlaylistState extends State<DownloadPlaylist> {
     final sendPort = args[2] as SendPort;
 
     try {
+      //Archive
       final archive = Archive();
+
+      //Add Files to Archive
       for (final filePath in filePaths) {
+        //File
         final file = File(filePath);
+
+        //File Bytes
         final fileBytes = file.readAsBytesSync();
+
+        //Add File to Archive
         archive.addFile(ArchiveFile(
-          p.basename(file.path), // Use basename to avoid full path in zip
+          p.basename(file.path),
           fileBytes.length,
           fileBytes,
         ));
+
+        //Delete Original File
+        file.deleteSync();
       }
 
+      //ZIP Bytes
       final zipBytes = ZipEncoder().encode(archive);
+
+      //Write ZIP
       File(zipPath).writeAsBytesSync(zipBytes!);
+
+      //Send Success Signal
       sendPort.send("success");
     } catch (e) {
       sendPort.send(e.toString());
