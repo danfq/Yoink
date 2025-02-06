@@ -53,7 +53,7 @@ class _VerifyPlaylistState extends State<VerifyPlaylist> {
     return Scaffold(
       appBar: MainWidgets.appBar(
         centerTitle: false,
-        title: const Text("Verify Playlist"),
+        title: Text("Verify Playlist - ${_videos.length} Videos"),
         onBack: () {
           //Confirm if Not Saved
           if (widget.showSave) {

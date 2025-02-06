@@ -137,19 +137,27 @@ class PlaylistHandler {
       final playlist = await get(playlistURL: playlistURL);
 
       //Get All Videos
-      final videos = await _youtube.playlists
-          .getVideos(playlist.id)
-          .map(
-            (video) => Video(
-              id: video.id.value,
-              title: video.title,
-              thumb: video.thumbnails.highResUrl,
-              channel: video.author,
-              duration: video.duration ?? Duration.zero,
-              releaseDate: video.uploadDate ?? DateTime.now(),
-            ),
-          )
-          .toList();
+      final videos = await _youtube.playlists.getVideos(playlist.id).map(
+        (video) {
+          //Debug
+          debugPrint(
+            "[VIDEOS] ID: ${video.id} | Duration: ${video.duration}",
+          );
+
+          //Return Video
+          return Video(
+            id: video.id.value,
+            title: video.title,
+            thumb: video.thumbnails.highResUrl,
+            channel: video.author,
+            duration: video.duration ?? Duration.zero,
+            releaseDate: video.uploadDate ?? DateTime.now(),
+          );
+        },
+      ).toList();
+
+      //Debug
+      debugPrint("[VIDEOS] Playlist Total Videos: ${videos.length}");
 
       //Close Loading Dialog
       Get.back();
