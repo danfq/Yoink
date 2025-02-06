@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_vector_icons/flutter_vector_icons.dart";
+import "package:package_info_plus/package_info_plus.dart";
 import "package:settings_ui/settings_ui.dart";
 import "package:yoink/util/themes/controller.dart";
 import "package:yoink/util/widgets/main.dart";
@@ -141,12 +142,34 @@ class _SettingsState extends State<Settings> {
     );
   }
 
+  ///App Package Info
+  PackageInfo? appInfo;
+
+  ///Package Information
+  Future<void> setPackageInfo() async {
+    //Package Info
+    final packageInfo = await PackageInfo.fromPlatform();
+
+    //Set App Info
+    setState(() {
+      appInfo = packageInfo;
+    });
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
 
     //Status Bar & Navigation Bar
     ThemeController.statusAndNavSettings(mode: _currentTheme);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    //Set App Info
+    setPackageInfo();
   }
 
   @override
@@ -241,6 +264,7 @@ class _SettingsState extends State<Settings> {
                   onPressed: (context) => Get.to(
                     () => LicensePage(
                       applicationName: "Yoink",
+                      applicationVersion: appInfo?.version,
                       applicationIcon: Padding(
                         padding: const EdgeInsets.all(12.0),
                         child: Image.asset(
