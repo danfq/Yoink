@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:get/route_manager.dart';
 import 'package:yoink/pages/download/verify.dart';
@@ -17,24 +18,51 @@ class FindVideos extends StatefulWidget {
 }
 
 class _FindVideosState extends State<FindVideos> {
-  /// Search Controller
+  ///Search Controller
   final TextEditingController _searchController = TextEditingController();
 
-  /// Download Playlist
+  ///Download Playlist
   final ValueNotifier<List<Video>> downloadPlaylist =
       ValueNotifier<List<Video>>([]);
 
-  /// Query
+  ///Query
   String query = "";
+
+  ///Search Field Focus Node
+  final searchFocusNode = FocusNode();
+
+  ///On Enter Pressed on Search Field
+  void _onEnterPressed() {
+    //Search Query
+    final searchQuery = _searchController.text.trim();
+
+    //Check Query
+    if (searchQuery.isNotEmpty) {
+      setState(() {
+        query = searchQuery;
+      });
+    }
+  }
+
+  ///Search for Videos by Query
+  Future<List<Video>> _searchVideos(String query) async {
+    return await API.searchByQuery(query: query);
+  }
 
   @override
   void initState() {
     super.initState();
+
+    //Focus Search Field
+    searchFocusNode.requestFocus();
   }
 
-  // Method to search videos by query
-  Future<List<Video>> _searchVideos(String query) async {
-    return await API.searchByQuery(query: query);
+  @override
+  void dispose() {
+    //Dispose of Search Field Focus
+    searchFocusNode.dispose();
+
+    super.dispose();
   }
 
   @override
@@ -43,33 +71,42 @@ class _FindVideosState extends State<FindVideos> {
       body: SafeArea(
         child: Column(
           children: [
-            // Search Input Row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                // Input Field
-                Expanded(
-                  child: Input(
-                    controller: _searchController,
-                    placeholder: "Search for something...",
+            //Search Input
+            KeyboardListener(
+              focusNode: searchFocusNode,
+              onKeyEvent: (keyEvent) {
+                //Check for Enter
+                if (keyEvent.logicalKey == LogicalKeyboardKey.enter) {
+                  _onEnterPressed();
+                }
+              },
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  // Input Field
+                  Expanded(
+                    child: Input(
+                      controller: _searchController,
+                      placeholder: "Search for something...",
+                    ),
                   ),
-                ),
 
-                // Search Button
-                Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Buttons.elevatedIcon(
-                    text: "Search",
-                    icon: Ionicons.ios_search_outline,
-                    onTap: () {
-                      setState(() {
-                        query = _searchController.text.trim();
-                      });
-                    },
+                  // Search Button
+                  Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Buttons.elevatedIcon(
+                      text: "Search",
+                      icon: Ionicons.ios_search_outline,
+                      onTap: () {
+                        setState(() {
+                          query = _searchController.text.trim();
+                        });
+                      },
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
 
             //Spacing

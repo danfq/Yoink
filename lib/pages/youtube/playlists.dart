@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:get/route_manager.dart';
 import 'package:yoink/pages/download/verify.dart';
-import 'package:yoink/util/data/api.dart';
 import 'package:yoink/util/data/local.dart';
 import 'package:yoink/util/handlers/anim.dart';
 import 'package:yoink/util/handlers/playlists.dart';
@@ -100,7 +99,10 @@ class _PlaylistsState extends State<Playlists> {
               child: Buttons.iconFilled(
                 icon: Ionicons.ios_add_outline,
                 backgroundColor: Theme.of(context).cardColor,
-                onTap: () {},
+                onTap: () async {
+                  //Initialize Import Procedure
+                  await PlaylistHandler.import();
+                },
               ),
             ),
           ),
