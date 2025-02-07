@@ -8,7 +8,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:yoink/pages/download/download.dart';
 import 'package:yoink/pages/download/verify.dart';
-import 'package:yoink/util/data/api.dart';
 import 'package:yoink/util/data/local.dart';
 import 'package:yoink/util/handlers/toast.dart';
 import 'package:yoink/util/models/playlist.dart';

@@ -38,6 +38,7 @@ dependencies:
   icons_launcher: ^3.0.0
   package_info_plus: ^8.2.0
 
+  path: any
 dev_dependencies:
   flutter_test:
     sdk: flutter
