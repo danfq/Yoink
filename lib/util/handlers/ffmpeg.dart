@@ -43,59 +43,64 @@ class FFmpegHandler {
     required Directory tempDir,
   }) async {
     try {
-      // Check Video & Audio Files
-      if (!videoFile.existsSync()) {
-        throw Exception(
-          "[WINDOWS] Video File does not exist at ${videoFile.path}",
-        );
-      }
-      if (!audioFile.existsSync()) {
-        throw Exception(
-          "[WINDOWS] Audio File does not exist at ${audioFile.path}",
-        );
-      }
+      //TODO: Add Other Platforms
 
-      //Output File
-      final outputFile = File(
-        "${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}_output.mp4",
-      );
+      //Windows
+      if (Platform.isWindows) {
+        // Check Video & Audio Files
+        if (!videoFile.existsSync()) {
+          throw Exception(
+            "[WINDOWS] Video File does not exist at ${videoFile.path}",
+          );
+        }
+        if (!audioFile.existsSync()) {
+          throw Exception(
+            "[WINDOWS] Audio File does not exist at ${audioFile.path}",
+          );
+        }
 
-      final command = [
-        "ffmpeg",
-        "-i",
-        videoFile.path,
-        "-i",
-        audioFile.path,
-        "-c:v",
-        "copy",
-        "-c:a",
-        "aac",
-        outputFile.path,
-      ];
-
-      //FFmpeg Result
-      final result = await Process.run(command[0], command.sublist(1));
-
-      if (result.exitCode == 0) {
-        //Debug
-        debugPrint(
-          "[WINDOWS] Video and Audio Combined Successfully: ${outputFile.path}",
+        //Output File
+        final outputFile = File(
+          "${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}_output.mp4",
         );
 
-        //Delete Audio & Video Files
-        await audioFile.delete();
-        await videoFile.delete();
+        final command = [
+          "ffmpeg",
+          "-i",
+          videoFile.path,
+          "-i",
+          audioFile.path,
+          "-c:v",
+          "copy",
+          "-c:a",
+          "aac",
+          outputFile.path,
+        ];
 
-        //Return Output File
-        return outputFile;
-      } else {
-        //Delete Audio & Video Files
-        await audioFile.delete();
-        await videoFile.delete();
+        //FFmpeg Result
+        final result = await Process.run(command[0], command.sublist(1));
 
-        throw Exception(
-          "[WINDOWS] FFmpeg Failed with Code: ${result.exitCode}\n${result.stderr}",
-        );
+        if (result.exitCode == 0) {
+          //Debug
+          debugPrint(
+            "[WINDOWS] Video and Audio Combined Successfully: ${outputFile.path}",
+          );
+
+          //Delete Audio & Video Files
+          await audioFile.delete();
+          await videoFile.delete();
+
+          //Return Output File
+          return outputFile;
+        } else {
+          //Delete Audio & Video Files
+          await audioFile.delete();
+          await videoFile.delete();
+
+          throw Exception(
+            "[WINDOWS] FFmpeg Failed with Code: ${result.exitCode}\n${result.stderr}",
+          );
+        }
       }
     } catch (error) {
       //Delete Audio & Video Files

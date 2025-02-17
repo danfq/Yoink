@@ -219,8 +219,11 @@ class PlaylistHandler {
       }
     }
 
-    // Desktop or Web - Use File Picker
+    //Desktop or Web - Use File Picker
     final selectedDirectory = await FilePicker.platform.getDirectoryPath();
+
+    //Debug
+    debugPrint("[DIR] Selected: $selectedDirectory");
 
     //Return Selected Directory
     return selectedDirectory;

@@ -50,8 +50,9 @@ class API {
     try {
       var ytExplode = yt.YoutubeExplode();
       var video = await ytExplode.videos.get(videoID);
-      var manifest =
-          await ytExplode.videos.streamsClient.getManifest(video.id.value);
+      var manifest = await ytExplode.videos.streamsClient.getManifest(
+        video.id.value,
+      );
 
       final defaultVideoQuality =
           LocalData.boxData(box: "settings")["defaultVideoQuality"];
@@ -74,8 +75,9 @@ class API {
       );
 
       // Download audio first
-      final audioStreamClient =
-          ytExplode.videos.streamsClient.get(audioStreamInfo);
+      final audioStreamClient = ytExplode.videos.streamsClient.get(
+        audioStreamInfo,
+      );
       final audioSink = audioFile.openWrite();
       await audioStreamClient.pipe(audioSink);
       await audioSink.close();

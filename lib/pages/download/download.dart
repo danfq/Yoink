@@ -69,8 +69,9 @@ class _DownloadPlaylistState extends State<DownloadPlaylist> {
           final video = widget.playlist[index];
 
           // Sanitize the filename before downloading
-          final sanitizedFileName =
-              _sanitizeFilename("${index + 1} - ${video.title}");
+          final sanitizedFileName = _sanitizeFilename(
+            "${index + 1} - ${video.title}",
+          );
 
           // Download the video directly to the target path
           final file = await _downloadVideo(video, sanitizedFileName);
@@ -122,6 +123,7 @@ class _DownloadPlaylistState extends State<DownloadPlaylist> {
   }
 
   Future<File> _downloadVideo(Video video, String fileName) async {
+    //Download Video
     final file = await API.downloadVideo(
       videoID: video.id,
       audioOnly: widget.audioOnly,
