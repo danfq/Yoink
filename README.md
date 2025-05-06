@@ -1,16 +1,7 @@
-# yoink
+# Yoink
 
-A new Flutter project.
+## IMPORTANT
+I've moved all my important Projects to my own Service - [Gitaroo](https://git.danfq.dev/danfq).<br>
+You can find updates to all my FOSS Apps there.
 
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+See ya ;)
